@@ -298,7 +298,7 @@ fn define_composite(
 
     for field in &composite.fields {
         let field_type = type_ref(types[&field.typ], types);
-        definition.new_field(&field.name, &field_type);
+        definition.new_field(&field.name, &field_type).vis("pub");
     }
 }
 

@@ -8,6 +8,7 @@ use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use ink_primitives::AccountId;
 use sp_core::crypto::Ss58Codec;
+use test_contract::{Enum1, Struct1, Struct2};
 
 struct Conn(aleph_client::Connection);
 
@@ -105,6 +106,20 @@ async fn main() -> Result<()> {
     println!("{:?}", contract.get_u32(&conn).await?);
     println!("{:?}", contract.set_u32(&signed, 42).await?);
     println!("{:?}", contract.get_u32(&conn).await?);
+    println!("{:?}", contract.get_struct2(&conn).await?);
+    println!(
+        "{:?}",
+        contract
+            .set_struct2(
+                &signed,
+                Struct2 {
+                    a: Struct1 { a: 1, b: 2 },
+                    b: Enum1::B(3)
+                }
+            )
+            .await?
+    );
+    println!("{:?}", contract.get_struct2(&conn).await?);
 
     Ok(())
 }

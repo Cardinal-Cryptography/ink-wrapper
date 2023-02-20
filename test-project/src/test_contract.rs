@@ -11,13 +11,15 @@ impl From<ink_primitives::AccountId> for Instance {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode)]
-pub enum Enum2 {
-    A,
-    B(Struct1),
-    C {
-        name1: Struct1,
-        name2: (Enum1, Enum1),
-    },
+pub struct Struct2 {
+    pub a: Struct1,
+    pub b: Enum1,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode)]
+pub struct Struct1 {
+    pub a: u32,
+    pub b: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode)]
@@ -28,15 +30,13 @@ pub enum Enum1 {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode)]
-pub struct Struct2 {
-    a: Struct1,
-    b: Enum1,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode)]
-pub struct Struct1 {
-    a: u32,
-    b: u64,
+pub enum Enum2 {
+    A,
+    B(Struct1),
+    C {
+        name1: Struct1,
+        name2: (Enum1, Enum1),
+    },
 }
 
 impl Instance {
