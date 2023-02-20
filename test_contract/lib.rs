@@ -1,0 +1,144 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[ink::contract]
+mod test_contract {
+    #[cfg(feature = "std")]
+    use ink::storage::traits::StorageLayout;
+
+    #[ink(storage)]
+    #[derive(Default)]
+    pub struct TestContract {
+        u32_val: u32,
+        bool_val: bool,
+        struct1_val: Struct1,
+        enum1_val: Enum1,
+        struct2_val: Struct2,
+        enum2_val: Enum2,
+        newtype1_val: NewType1,
+    }
+
+    #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Struct1 {
+        a: u32,
+        b: u64,
+    }
+
+    #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum Enum1 {
+        #[default]
+        A,
+        B(u32),
+        C(u32, u64),
+    }
+
+    #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Struct2 {
+        a: Struct1,
+        b: Enum1,
+    }
+
+    #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub enum Enum2 {
+        #[default]
+        A,
+        B(Struct1),
+        C {
+            name1: Struct1,
+            name2: (Enum1, Enum1),
+        },
+    }
+
+    type NewType1 = u32;
+
+    impl TestContract {
+        #[ink(constructor)]
+        pub fn new(an_u32: u32, a_bool: bool) -> Self {
+            Self {
+                u32_val: an_u32,
+                bool_val: a_bool,
+                ..Default::default()
+            }
+        }
+
+        #[ink(constructor)]
+        pub fn default() -> Self {
+            Self {
+                ..Default::default()
+            }
+        }
+
+        #[ink(message)]
+        pub fn get_u32(&self) -> u32 {
+            self.u32_val
+        }
+
+        #[ink(message)]
+        pub fn get_struct1(&self) -> Struct1 {
+            self.struct1_val
+        }
+
+        #[ink(message)]
+        pub fn get_enum1(&self) -> Enum1 {
+            self.enum1_val
+        }
+
+        #[ink(message)]
+        pub fn get_struct2(&self) -> Struct2 {
+            self.struct2_val
+        }
+
+        #[ink(message)]
+        pub fn get_enum2(&self) -> Enum2 {
+            self.enum2_val
+        }
+
+        #[ink(message)]
+        pub fn get_newtype1(&self) -> NewType1 {
+            self.newtype1_val
+        }
+
+        #[ink(message)]
+        pub fn get_bool(&self) -> bool {
+            self.bool_val
+        }
+
+        #[ink(message)]
+        pub fn set_u32(&mut self, an_u32: u32) {
+            self.u32_val = an_u32;
+        }
+
+        #[ink(message)]
+        pub fn set_bool(&mut self, a_bool: bool) {
+            self.bool_val = a_bool;
+        }
+
+        #[ink(message)]
+        pub fn set_struct1(&mut self, a_struct1: Struct1) {
+            self.struct1_val = a_struct1;
+        }
+
+        #[ink(message)]
+        pub fn set_enum1(&mut self, an_enum1: Enum1) {
+            self.enum1_val = an_enum1;
+        }
+
+        #[ink(message)]
+        pub fn set_struct2(&mut self, a_struct2: Struct2) {
+            self.struct2_val = a_struct2;
+        }
+
+        #[ink(message)]
+        pub fn set_enum2(&mut self, an_enum2: Enum2) {
+            self.enum2_val = an_enum2;
+        }
+
+        #[ink(message)]
+        pub fn set_newtype1(&mut self, a_newtype1: NewType1) {
+            self.newtype1_val = a_newtype1;
+        }
+    }
+}
