@@ -9,7 +9,10 @@ edition = "2021"
 async-trait = "0.1.64"
 ink_primitives = "4.0.0-beta.1"
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-aleph-client = { path = "../../aleph-client", optional = true }
+aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "0bf23c86fd3ada6a72928b2e019b8eba46430368", optional = true }
+pallet-contracts-primitives = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "aleph-v0.9.33" }
+anyhow = { version = "1.0.51", optional = true }
 
 [features]
-aleph-client = ["dep:aleph-client"]
+default = ["aleph_client"]
+aleph_client = ["dep:aleph_client", "dep:anyhow"]
