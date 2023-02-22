@@ -35,10 +35,7 @@ mod test_contract {
 
     #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
-    pub struct Struct2 {
-        a: Struct1,
-        b: Enum1,
-    }
+    pub struct Struct2(Struct1, Enum1);
 
     #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]

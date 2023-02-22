@@ -25,13 +25,7 @@ async fn main() -> Result<()> {
     println!(
         "{:?}",
         contract
-            .set_struct2(
-                &conn,
-                Struct2 {
-                    a: Struct1 { a: 1, b: 2 },
-                    b: Enum1::B(3)
-                }
-            )
+            .set_struct2(&conn, Struct2(Struct1 { a: 1, b: 2 }, Enum1::B(3)))
             .await?
     );
     println!("{:?}", contract.get_struct2(&conn).await?);

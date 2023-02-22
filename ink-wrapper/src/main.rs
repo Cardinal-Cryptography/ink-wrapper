@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-use codegen::Scope;
+use genco::fmt;
+use genco::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -97,12 +98,13 @@ struct VariantDef {
 #[derive(Debug, Serialize, Deserialize)]
 struct CompositeDef {
     // TODO composite with unnamed fields
+    // TODO empty composite
     fields: Vec<Field>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 struct Field {
-    name: String,
+    name: Option<String>,
     #[serde(rename = "type")]
     typ: u32,
 }
@@ -111,14 +113,34 @@ struct Field {
 struct Variant {
     name: String,
     #[serde(default = "Vec::new")]
-    fields: Vec<VariantField>,
+    fields: Vec<Field>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct VariantField {
-    name: Option<String>,
-    #[serde(rename = "type")]
-    typ: u32,
+enum Fields {
+    Named(Vec<(String, u32)>),
+    Unnamed(Vec<u32>),
+}
+
+impl From<Vec<Field>> for Fields {
+    fn from(fields: Vec<Field>) -> Self {
+        if fields.iter().all(|f| f.name.is_none()) {
+            Fields::Unnamed(fields.iter().map(|f| f.typ).collect())
+        } else {
+            Fields::Named(
+                fields
+                    .iter()
+                    .map(|f| {
+                        (
+                            f.name.clone().unwrap_or_else(|| {
+                                panic!("{:?} has a mix of named and unnamed fields", fields)
+                            }),
+                            f.typ,
+                        )
+                    })
+                    .collect(),
+            )
+        }
+    }
 }
 
 impl Type {
@@ -149,6 +171,18 @@ impl TypeDef {
     }
 }
 
+impl Variant {
+    fn fields(&self) -> Fields {
+        self.fields.clone().into()
+    }
+}
+
+impl CompositeDef {
+    fn fields(&self) -> Fields {
+        self.fields.clone().into()
+    }
+}
+
 impl Message {
     fn selector_bytes(&self) -> Vec<u8> {
         let selector = self.selector.replace("0x", "");
@@ -167,138 +201,163 @@ fn main() -> Result<()> {
         .map(|t| (t.id, t))
         .collect::<HashMap<_, _>>();
 
-    let mut result = Scope::new();
-    result.import("scale", "Encode");
+    let tokens: rust::Tokens = generate(&metadata, &types);
 
-    let c = result.new_struct("Instance");
-    c.vis("pub");
-    c.new_field("account_id", "ink_primitives::AccountId");
+    let stdout = std::io::stdout();
+    let mut w = fmt::IoWriter::new(stdout.lock());
 
-    let i = result.new_impl("From<ink_primitives::AccountId> for Instance");
-    i.new_fn("from")
-        .arg("account_id", "ink_primitives::AccountId")
-        .ret("Self")
-        .line("Self { account_id }");
+    let fmt = fmt::Config::from_lang::<Rust>().with_indentation(fmt::Indentation::Space(4));
 
-    for typ in types.values() {
-        if !typ.is_primitive() && !typ.is_ink() && !typ.is_builtin() {
-            define_type(&mut result, typ, &types);
-        }
-    }
+    let config = rust::Config::default().with_default_import(rust::ImportMode::Qualified);
 
-    let i = result.new_impl("Instance");
-
-    for constructor in metadata.spec.constructors {
-        let f = i
-            .new_fn(&constructor.label)
-            .set_async(true)
-            .vis("pub")
-            .generic("E")
-            .generic("TxInfo")
-            .generic("C: ink_wrapper_types::SignedConnection<TxInfo, E>")
-            .arg("conn", "&C")
-            .ret(type_ref(types[&constructor.return_type.id], &types));
-
-        for arg in constructor.args {
-            f.arg(&arg.label, type_ref(types[&arg.typ.id], &types));
-        }
-
-        f.line("Ok(())");
-    }
-
-    for message in metadata.spec.messages {
-        // TODO args named by us are unhygienic
-        let f = i
-            .new_fn(&message.label)
-            .set_async(true)
-            .vis("pub")
-            .arg_ref_self()
-            .arg("conn", "&C");
-
-        if message.args.len() > 0 {
-            f.line(format!(
-                "let mut args = vec!{:?};",
-                message.selector_bytes()
-            ));
-        } else {
-            f.line(format!("let args = vec!{:?};", message.selector_bytes()));
-        }
-
-        if message.mutates {
-            f.generic("TxInfo")
-                .generic("E")
-                .generic("C: ink_wrapper_types::SignedConnection<TxInfo, E>")
-                .ret("Result<TxInfo, E>");
-        } else {
-            f.generic("E")
-                .generic("C: ink_wrapper_types::Connection<E>")
-                .ret(format!(
-                    "Result<{}, E>",
-                    type_ref(types[&message.return_type.id], &types)
-                ));
-        };
-
-        for arg in message.args {
-            f.arg(&arg.label, type_ref(types[&arg.typ.id], &types));
-            f.line(format!("{}.encode_to(&mut args);", arg.label));
-        }
-
-        if message.mutates {
-            f.line("conn.exec(self.account_id, args).await");
-        } else {
-            f.line("conn.read(self.account_id, args).await");
-        }
-    }
-
-    println!("{}", result.to_string());
-
+    tokens.format_file(&mut w.as_formatter(&fmt), &config)?;
     Ok(())
 }
 
-fn define_type(scope: &mut Scope, typ: &Type, types: &HashMap<u32, &Type>) {
-    match &typ.typ.def {
-        TypeDef::Primitive { .. } => (),
-        TypeDef::Variant { variant, .. } => define_variant(scope, typ, &variant, types),
-        TypeDef::Composite { composite, .. } => define_composite(scope, typ, &composite, types),
-        TypeDef::Tuple { .. } => (),
+fn generate(metadata: &Metadata, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    let encode = rust::import("scale", "Encode").with_alias("_");
+
+    quote! {
+        $(register(encode))
+
+        $(for typ in types.values() {
+            $(if !typ.is_primitive() && !typ.is_ink() && !typ.is_builtin() {
+                $(define_type(typ, &types))
+            })
+        })
+
+        pub struct Instance {
+            account_id: ink_primitives::AccountId,
+        }
+
+        impl From<ink_primitives::AccountId> for Instance {
+            fn from(account_id: ink_primitives::AccountId) -> Self {
+                Self { account_id }
+            }
+        }
+
+        impl Instance {
+            $(for message in metadata.spec.messages.iter() {
+                $(define_message(message, &types))
+            })
+        }
     }
 }
 
-fn define_variant(
-    scope: &mut Scope,
-    typ: &Type,
-    variant: &VariantDef,
-    types: &HashMap<u32, &Type>,
-) {
-    let definition = scope.new_enum(&typ.qualified_name());
-    definition.vis("pub");
-    definition.derive("Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode");
+fn define_type(typ: &Type, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    match &typ.typ.def {
+        TypeDef::Primitive { .. } => rust::Tokens::new(),
+        TypeDef::Variant { variant, .. } => define_variant(typ, &variant, types),
+        TypeDef::Composite { composite, .. } => define_composite(typ, &composite, types),
+        TypeDef::Tuple { .. } => rust::Tokens::new(),
+    }
+}
 
-    for variant in &variant.variants {
-        let variant_def = definition.new_variant(&variant.name);
-
-        for field in variant.fields.iter() {
-            match &field.name {
-                Some(name) => variant_def.named(&name, &type_ref(types[&field.typ], types)),
-                None => variant_def.tuple(&type_ref(types[&field.typ], types)),
-            };
+fn define_variant(typ: &Type, variant: &VariantDef, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    quote! {
+        #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+        pub enum $(typ.qualified_name()) {
+            $(for variant in &variant.variants {
+                $(match variant.fields() {
+                    Fields::Named(fields) => {
+                        $(&variant.name) {
+                            $(for (name, typ) in fields {
+                                $(name): $(type_ref(types[&typ], types)),
+                            })
+                        },
+                    },
+                    Fields::Unnamed(fields) => {
+                        $(&variant.name) (
+                            $(for typ in fields {
+                                $(type_ref(types[&typ], types)),
+                            })
+                        ),
+                    },
+                })
+            })
         }
     }
 }
 
 fn define_composite(
-    scope: &mut Scope,
     typ: &Type,
     composite: &CompositeDef,
     types: &HashMap<u32, &Type>,
-) {
-    let definition = scope.new_struct(&typ.qualified_name());
-    definition.vis("pub");
-    definition.derive("Debug, Clone, Copy, PartialEq, Eq, scale::Encode, scale::Decode");
+) -> rust::Tokens {
+    quote! {
+    #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+        $(match composite.fields() {
+            Fields::Named(fields) => {
+                pub struct $(typ.qualified_name()) {
+                    $(for (name, typ) in fields {
+                        pub $(name): $(type_ref(types[&typ], types)),
+                    })
+                }
+            },
 
-    for field in &composite.fields {
-        let field_type = type_ref(types[&field.typ], types);
-        definition.new_field(&field.name, &field_type).vis("pub");
+            Fields::Unnamed(fields) => {
+                pub struct $(typ.qualified_name()) (
+                    $(for typ in fields {
+                        pub $(type_ref(types[&typ], types)),
+                    })
+                );
+            },
+        })
+    }
+}
+
+fn define_message(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    if message.mutates {
+        define_mutator(message, types)
+    } else {
+        define_reader(message, types)
+    }
+}
+
+fn define_reader(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    quote! {
+        #[allow(dead_code)]
+        pub async fn $(&message.label)<E, C: ink_wrapper_types::Connection<E>>(&self, conn: &C, $(message_args(message, types))) ->
+            Result<$(type_ref(types[&message.return_type.id], types)), E>
+        {
+            $(gather_args(message))
+            conn.read(self.account_id, data).await
+        }
+    }
+}
+
+fn define_mutator(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    quote! {
+        #[allow(dead_code)]
+        pub async fn $(&message.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+            &self, conn: &C,
+            $(message_args(message, types))
+        ) -> Result<TxInfo, E>
+        {
+            $(gather_args(message))
+            conn.exec(self.account_id, data).await
+        }
+    }
+}
+
+fn gather_args(message: &Message) -> rust::Tokens {
+    quote! {
+        $(if message.args.len() == 0 {
+            let data = vec!$(format!("{:?}", &message.selector_bytes()));
+        } else {
+            let mut data = vec!$(format!("{:?}", &message.selector_bytes()));
+            $(for arg in &message.args {
+                $(&arg.label).encode_to(&mut data);
+            })
+        })
+    }
+}
+
+fn message_args(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
+    quote! {
+        $(for arg in &message.args {
+            $(&arg.label): $(type_ref(types[&arg.typ.id], types)),
+        })
     }
 }
 
