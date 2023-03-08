@@ -19,8 +19,14 @@ struct Args {
 #[derive(Debug, Serialize, Deserialize)]
 struct Metadata {
     contract: Contract,
+    source: Source,
     types: Vec<Type>,
     spec: Spec,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Source {
+    hash: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +42,7 @@ struct Spec {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Constructor {
+    selector: String,
     label: String,
     args: Vec<Arg>,
     #[serde(rename = "returnType")]
@@ -185,9 +192,18 @@ impl CompositeDef {
 
 impl Message {
     fn selector_bytes(&self) -> Vec<u8> {
-        let selector = self.selector.replace("0x", "");
-        hex::decode(selector).unwrap()
+        hex_to_bytes(&self.selector)
     }
+}
+
+impl Constructor {
+    fn selector_bytes(&self) -> Vec<u8> {
+        hex_to_bytes(&self.selector)
+    }
+}
+
+fn hex_to_bytes(hex: &str) -> Vec<u8> {
+    hex::decode(hex.replace("0x", "")).unwrap()
 }
 
 fn main() -> Result<()> {
@@ -237,6 +253,10 @@ fn generate(metadata: &Metadata, types: &HashMap<u32, &Type>) -> rust::Tokens {
         }
 
         impl Instance {
+            $(for constructor in metadata.spec.constructors.iter() {
+                $(define_constructor(&metadata.source.hash, constructor, &types)) $['\n']
+            })
+
             $(for message in metadata.spec.messages.iter() {
                 $(define_message(message, &types))
             })
@@ -306,6 +326,26 @@ fn define_composite(
     }
 }
 
+fn define_constructor(
+    code_hash: &str,
+    constructor: &Constructor,
+    types: &HashMap<u32, &Type>,
+) -> rust::Tokens {
+    quote! {
+        #[allow(dead_code)]
+        pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+            conn: &C,
+            salt: Vec<u8>,
+            $(message_args(&constructor.args, types))
+        ) -> Result<Self, E> {
+            $(gather_args(&constructor.selector_bytes(), &constructor.args))
+            let code_hash = $(format!("{:?}", hex_to_bytes(code_hash)));
+            let account_id = conn.instantiate(code_hash, salt, data).await?;
+            Ok(Self { account_id })
+        }
+    }
+}
+
 fn define_message(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
     if message.mutates {
         define_mutator(message, types)
@@ -317,10 +357,13 @@ fn define_message(message: &Message, types: &HashMap<u32, &Type>) -> rust::Token
 fn define_reader(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
     quote! {
         #[allow(dead_code)]
-        pub async fn $(&message.label)<E, C: ink_wrapper_types::Connection<E>>(&self, conn: &C, $(message_args(message, types))) ->
+        pub async fn $(&message.label)<E, C: ink_wrapper_types::Connection<E>>(
+            &self,
+            conn: &C, $(message_args(&message.args, types))
+        ) ->
             Result<$(type_ref(types[&message.return_type.id], types)), E>
         {
-            $(gather_args(message))
+            $(gather_args(&message.selector_bytes(), &message.args))
             conn.read(self.account_id, data).await
         }
     }
@@ -331,31 +374,31 @@ fn define_mutator(message: &Message, types: &HashMap<u32, &Type>) -> rust::Token
         #[allow(dead_code)]
         pub async fn $(&message.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
             &self, conn: &C,
-            $(message_args(message, types))
+            $(message_args(&message.args, types))
         ) -> Result<TxInfo, E>
         {
-            $(gather_args(message))
+            $(gather_args(&message.selector_bytes(), &message.args))
             conn.exec(self.account_id, data).await
         }
     }
 }
 
-fn gather_args(message: &Message) -> rust::Tokens {
+fn gather_args(selector: &Vec<u8>, args: &Vec<Arg>) -> rust::Tokens {
     quote! {
-        $(if message.args.len() == 0 {
-            let data = vec!$(format!("{:?}", &message.selector_bytes()));
+        $(if args.len() == 0 {
+            let data = vec!$(format!("{:?}", &selector));
         } else {
-            let mut data = vec!$(format!("{:?}", &message.selector_bytes()));
-            $(for arg in &message.args {
+            let mut data = vec!$(format!("{:?}", &selector));
+            $(for arg in args {
                 $(&arg.label).encode_to(&mut data);
             })
         })
     }
 }
 
-fn message_args(message: &Message, types: &HashMap<u32, &Type>) -> rust::Tokens {
+fn message_args(args: &Vec<Arg>, types: &HashMap<u32, &Type>) -> rust::Tokens {
     quote! {
-        $(for arg in &message.args {
+        $(for arg in args {
             $(&arg.label): $(type_ref(types[&arg.typ.id], types)),
         })
     }

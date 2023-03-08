@@ -1428,6 +1428,7 @@ dependencies = [
  "ink_primitives",
  "pallet-contracts-primitives",
  "parity-scale-codec",
+ "subxt",
 ]
 
 [[package]]
@@ -4036,6 +4037,7 @@ dependencies = [
  "ink-wrapper-types",
  "ink_primitives",
  "parity-scale-codec",
+ "rand 0.8.5",
  "scale-info",
  "sp-core 16.0.0",
  "tokio",

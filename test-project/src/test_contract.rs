@@ -6,12 +6,6 @@ pub struct Struct1 {
     pub b: u64,
 }
 #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
-pub enum Enum1 {
-    A(),
-    B(u32),
-    C(u32, u64),
-}
-#[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
 pub enum Enum2 {
     A(),
     B(Struct1),
@@ -22,6 +16,12 @@ pub enum Enum2 {
 }
 #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
 pub struct Struct2(pub Struct1, pub Enum1);
+#[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+pub enum Enum1 {
+    A(),
+    B(u32),
+    C(u32, u64),
+}
 
 pub struct Instance {
     account_id: ink_primitives::AccountId,
@@ -34,6 +34,38 @@ impl From<ink_primitives::AccountId> for Instance {
 }
 
 impl Instance {
+    #[allow(dead_code)]
+    pub async fn new<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        conn: &C,
+        salt: Vec<u8>,
+        an_u32: u32,
+        a_bool: bool,
+    ) -> Result<Self, E> {
+        let mut data = vec![155, 174, 157, 94];
+        an_u32.encode_to(&mut data);
+        a_bool.encode_to(&mut data);
+        let code_hash = [
+            17, 67, 208, 109, 251, 117, 177, 58, 35, 196, 231, 230, 116, 158, 185, 43, 98, 86, 245,
+            56, 23, 32, 102, 96, 228, 229, 219, 9, 103, 212, 125, 253,
+        ];
+        let account_id = conn.instantiate(code_hash, salt, data).await?;
+        Ok(Self { account_id })
+    }
+
+    #[allow(dead_code)]
+    pub async fn default<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        conn: &C,
+        salt: Vec<u8>,
+    ) -> Result<Self, E> {
+        let data = vec![237, 75, 157, 27];
+        let code_hash = [
+            17, 67, 208, 109, 251, 117, 177, 58, 35, 196, 231, 230, 116, 158, 185, 43, 98, 86, 245,
+            56, 23, 32, 102, 96, 228, 229, 219, 9, 103, 212, 125, 253,
+        ];
+        let account_id = conn.instantiate(code_hash, salt, data).await?;
+        Ok(Self { account_id })
+    }
+
     #[allow(dead_code)]
     pub async fn get_u32<E, C: ink_wrapper_types::Connection<E>>(
         &self,

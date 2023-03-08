@@ -1,14 +1,37 @@
-use aleph_client::AsConnection;
-use aleph_client::Balance;
 use aleph_client::{
     pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi},
-    SignedConnectionApi, TxInfo, TxStatus,
+    sp_weights::weight_v2::Weight,
+    AsConnection, Balance, CodeHash, ConnectionApi, SignedConnectionApi, TxInfo, TxStatus,
 };
 use anyhow::Error;
 use anyhow::{anyhow, Context, Result};
 use async_trait::async_trait;
 use ink_primitives::AccountId;
 use pallet_contracts_primitives::ContractExecResult;
+use pallet_contracts_primitives::ContractInstantiateResult;
+use scale::Encode;
+use subxt::ext::sp_core::Bytes;
+use subxt::rpc_params;
+
+#[derive(Encode)]
+struct InstantiateRequest {
+    origin: [u8; 32],
+    value: Balance,
+    gas_limit: Option<Weight>,
+    storage_deposit_limit: Option<Balance>,
+    code: Code,
+    data: Vec<u8>,
+    salt: Vec<u8>,
+}
+
+#[derive(Encode)]
+enum Code {
+    /// The Wasm blob to be instantiated.
+    #[allow(dead_code)]
+    Code(Vec<u8>),
+    /// The code hash of an on-chain Wasm blob.
+    Existing(CodeHash),
+}
 
 #[async_trait]
 impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<Error> for C {
@@ -25,6 +48,51 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<Error> for C
 
 #[async_trait]
 impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
+    async fn instantiate(
+        &self,
+        code_hash: [u8; 32],
+        salt: Vec<u8>,
+        data: Vec<u8>,
+    ) -> Result<AccountId> {
+        let origin = self.account_id().clone().into();
+        let value = 0;
+
+        let args = InstantiateRequest {
+            origin,
+            value,
+            gas_limit: None,
+            storage_deposit_limit: None,
+            code: Code::Existing(code_hash.into()),
+            data: data.clone(),
+            salt: salt.clone(),
+        };
+
+        let params = rpc_params!["ContractsApi_instantiate", Bytes(args.encode())];
+        let dry_run_results: ContractInstantiateResult<AccountId, Balance> =
+            self.rpc_call("state_call".to_string(), params).await?;
+        let account_id = dry_run_results
+            .result
+            .map_err(|e| anyhow!("Contract exec failed {:?}", e))?
+            .account_id;
+
+        ContractsUserApi::instantiate(
+            self,
+            code_hash.into(),
+            value,
+            Weight {
+                ref_time: dry_run_results.gas_required.ref_time(),
+                proof_size: dry_run_results.gas_required.proof_size(),
+            },
+            None,
+            data,
+            salt,
+            TxStatus::Finalized,
+        )
+        .await?;
+
+        Ok(account_id.into())
+    }
+
     async fn exec(&self, account_id: ink_primitives::AccountId, data: Vec<u8>) -> Result<TxInfo> {
         let result = dry_run(
             &self.as_connection(),
@@ -38,7 +106,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         self.call(
             account_id.into(),
             0,
-            aleph_client::sp_weights::weight_v2::Weight {
+            Weight {
                 ref_time: result.gas_required.ref_time(),
                 proof_size: result.gas_required.proof_size(),
             },
