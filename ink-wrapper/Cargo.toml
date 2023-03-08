@@ -12,3 +12,5 @@ clap = { version = "4.1", features = ["derive"] }
 anyhow = "1.0"
 genco = "0.17"
 hex = "0.4.3"
+ink_metadata = "4.0.1"
+scale-info = "2.3"
