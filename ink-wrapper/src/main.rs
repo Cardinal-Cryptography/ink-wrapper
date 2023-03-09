@@ -5,8 +5,8 @@ use genco::prelude::*;
 use ink_metadata::{ConstructorSpec, InkProject, MessageParamSpec, MessageSpec};
 use scale_info::TypeDefPrimitive;
 use scale_info::{
-    form::PortableForm, Field, Type, TypeDef, TypeDefComposite, TypeDefTuple, TypeDefVariant,
-    Variant,
+    form::PortableForm, Field, Type, TypeDef, TypeDefArray, TypeDefComposite, TypeDefTuple,
+    TypeDefVariant, Variant,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -357,6 +357,7 @@ fn type_ref(id: u32, metadata: &InkProject) -> String {
         TypeDef::Tuple(tuple) => type_ref_tuple(tuple, metadata),
         TypeDef::Composite(_) => type_ref_generic(typ, metadata),
         TypeDef::Variant(_) => type_ref_generic(typ, metadata),
+        TypeDef::Array(array) => type_ref_array(array, metadata),
         _ => panic!("Unimplemented type: {:?}", typ),
     }
 }
@@ -410,6 +411,15 @@ fn type_ref_tuple(tuple: &TypeDefTuple<PortableForm>, metadata: &InkProject) -> 
             .map(|t| type_ref(t.id(), metadata))
             .collect::<Vec<_>>()
             .join(", ")
+    )
+}
+
+/// Generates a type reference to an array type.
+fn type_ref_array(array: &TypeDefArray<PortableForm>, metadata: &InkProject) -> String {
+    format!(
+        "[{}; {}]",
+        type_ref(array.type_param().id(), metadata),
+        array.len()
     )
 }
 

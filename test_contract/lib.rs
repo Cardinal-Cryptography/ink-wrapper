@@ -137,5 +137,18 @@ mod test_contract {
         pub fn set_newtype1(&mut self, a_newtype1: NewType1) {
             self.newtype1_val = a_newtype1;
         }
+
+        #[ink(message)]
+        pub fn set_array(&mut self, an_array: [u32; 3]) {
+            self.u32_val = an_array[0];
+        }
+
+        #[ink(message)]
+        pub fn get_array(&self) -> [(u32, Enum1); 2] {
+            [
+                (self.u32_val, self.enum1_val),
+                (self.u32_val, self.enum1_val),
+            ]
+        }
     }
 }

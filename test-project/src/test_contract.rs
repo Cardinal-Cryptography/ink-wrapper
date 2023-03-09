@@ -48,8 +48,8 @@ impl Instance {
         an_u32.encode_to(&mut data);
         a_bool.encode_to(&mut data);
         let code_hash = [
-            17, 67, 208, 109, 251, 117, 177, 58, 35, 196, 231, 230, 116, 158, 185, 43, 98, 86, 245,
-            56, 23, 32, 102, 96, 228, 229, 219, 9, 103, 212, 125, 253,
+            176, 71, 126, 203, 223, 255, 192, 198, 126, 3, 240, 129, 195, 183, 243, 205, 94, 30,
+            97, 29, 45, 170, 168, 63, 79, 68, 161, 143, 99, 145, 16, 112,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -62,8 +62,8 @@ impl Instance {
     ) -> Result<Self, E> {
         let data = vec![237, 75, 157, 27];
         let code_hash = [
-            17, 67, 208, 109, 251, 117, 177, 58, 35, 196, 231, 230, 116, 158, 185, 43, 98, 86, 245,
-            56, 23, 32, 102, 96, 228, 229, 219, 9, 103, 212, 125, 253,
+            176, 71, 126, 203, 223, 255, 192, 198, 126, 3, 240, 129, 195, 183, 243, 205, 94, 30,
+            97, 29, 45, 170, 168, 63, 79, 68, 161, 143, 99, 145, 16, 112,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -207,5 +207,25 @@ impl Instance {
         let mut data = vec![157, 123, 31, 26];
         a_newtype1.encode_to(&mut data);
         conn.exec(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn set_array<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        &self,
+        conn: &C,
+        an_array: [u32; 3],
+    ) -> Result<TxInfo, E> {
+        let mut data = vec![165, 155, 148, 100];
+        an_array.encode_to(&mut data);
+        conn.exec(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_array<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn: &C,
+    ) -> Result<Result<[(u32, Enum1); 2], ink_primitives::LangError>, E> {
+        let data = vec![227, 168, 189, 83];
+        conn.read(self.account_id, data).await
     }
 }
