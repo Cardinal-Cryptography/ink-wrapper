@@ -5,6 +5,17 @@ pub struct Struct1 {
     pub a: u32,
     pub b: u64,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+pub enum Enum1 {
+    A(),
+    B(u32),
+    C(u32, u64),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+pub struct Struct2(pub Struct1, pub Enum1);
+
 #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
 pub enum Enum2 {
     A(),
@@ -13,14 +24,6 @@ pub enum Enum2 {
         name1: Struct1,
         name2: (Enum1, Enum1),
     },
-}
-#[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
-pub struct Struct2(pub Struct1, pub Enum1);
-#[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
-pub enum Enum1 {
-    A(),
-    B(u32),
-    C(u32, u64),
 }
 
 pub struct Instance {
@@ -74,6 +77,7 @@ impl Instance {
         let data = vec![217, 45, 11, 204];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn get_struct1<E, C: ink_wrapper_types::Connection<E>>(
         &self,
@@ -82,6 +86,7 @@ impl Instance {
         let data = vec![67, 225, 36, 205];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn get_enum1<E, C: ink_wrapper_types::Connection<E>>(
         &self,
@@ -90,6 +95,7 @@ impl Instance {
         let data = vec![14, 243, 164, 76];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn get_struct2<E, C: ink_wrapper_types::Connection<E>>(
         &self,
@@ -98,6 +104,7 @@ impl Instance {
         let data = vec![164, 200, 63, 19];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn get_enum2<E, C: ink_wrapper_types::Connection<E>>(
         &self,
@@ -106,6 +113,7 @@ impl Instance {
         let data = vec![231, 221, 248, 25];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn get_newtype1<E, C: ink_wrapper_types::Connection<E>>(
         &self,
@@ -114,6 +122,7 @@ impl Instance {
         let data = vec![8, 68, 100, 9];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn get_bool<E, C: ink_wrapper_types::Connection<E>>(
         &self,
@@ -122,6 +131,7 @@ impl Instance {
         let data = vec![38, 2, 201, 24];
         conn.read(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_u32<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
@@ -132,6 +142,7 @@ impl Instance {
         an_u32.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_bool<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
@@ -142,6 +153,7 @@ impl Instance {
         a_bool.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_struct1<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
@@ -152,6 +164,7 @@ impl Instance {
         a_struct1.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_enum1<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
@@ -162,6 +175,7 @@ impl Instance {
         an_enum1.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_struct2<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
@@ -172,6 +186,7 @@ impl Instance {
         a_struct2.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_enum2<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
@@ -182,6 +197,7 @@ impl Instance {
         an_enum2.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
+
     #[allow(dead_code)]
     pub async fn set_newtype1<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         &self,
