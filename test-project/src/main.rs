@@ -28,6 +28,8 @@ async fn main() -> Result<()> {
     println!("{:?}", contract.get_struct2(&conn).await?);
     println!("{:?}", contract.set_array(&conn, [1, 2, 3]).await?);
     println!("{:?}", contract.get_array(&conn).await?);
+    println!("{:?}", contract.set_sequence(&conn, vec![1, 2, 3]).await?);
+    println!("{:?}", contract.get_sequence(&conn).await?);
 
     Ok(())
 }

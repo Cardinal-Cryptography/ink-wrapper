@@ -4,6 +4,7 @@
 mod test_contract {
     #[cfg(feature = "std")]
     use ink::storage::traits::StorageLayout;
+    use ink::{prelude::vec, prelude::vec::Vec};
 
     #[ink(storage)]
     #[derive(Default)]
@@ -149,6 +150,16 @@ mod test_contract {
                 (self.u32_val, self.enum1_val),
                 (self.u32_val, self.enum1_val),
             ]
+        }
+
+        #[ink(message)]
+        pub fn set_sequence(&mut self, a_sequence: Vec<u32>) {
+            self.u32_val = a_sequence[0];
+        }
+
+        #[ink(message)]
+        pub fn get_sequence(&self) -> Vec<(u32, Enum1)> {
+            vec![(self.u32_val, self.enum1_val); 2]
         }
     }
 }
