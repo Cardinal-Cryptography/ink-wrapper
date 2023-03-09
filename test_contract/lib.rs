@@ -5,6 +5,7 @@ mod test_contract {
     #[cfg(feature = "std")]
     use ink::storage::traits::StorageLayout;
     use ink::{prelude::vec, prelude::vec::Vec};
+    use scale::Compact;
 
     #[ink(storage)]
     #[derive(Default)]
@@ -160,6 +161,16 @@ mod test_contract {
         #[ink(message)]
         pub fn get_sequence(&self) -> Vec<(u32, Enum1)> {
             vec![(self.u32_val, self.enum1_val); 2]
+        }
+
+        #[ink(message)]
+        pub fn get_compact(&self) -> Compact<u32> {
+            Compact(self.u32_val)
+        }
+
+        #[ink(message)]
+        pub fn set_compact(&mut self, a_compact: Compact<u32>) {
+            self.u32_val = a_compact.0;
         }
     }
 }

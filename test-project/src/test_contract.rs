@@ -48,8 +48,8 @@ impl Instance {
         an_u32.encode_to(&mut data);
         a_bool.encode_to(&mut data);
         let code_hash = [
-            132, 249, 140, 143, 111, 190, 72, 190, 86, 188, 147, 48, 131, 139, 24, 168, 20, 2, 36,
-            192, 32, 102, 24, 121, 135, 31, 56, 176, 29, 104, 226, 233,
+            118, 134, 137, 190, 242, 136, 104, 209, 162, 0, 118, 104, 192, 101, 108, 46, 90, 235,
+            191, 113, 120, 234, 221, 128, 110, 123, 67, 59, 205, 161, 140, 53,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -62,8 +62,8 @@ impl Instance {
     ) -> Result<Self, E> {
         let data = vec![237, 75, 157, 27];
         let code_hash = [
-            132, 249, 140, 143, 111, 190, 72, 190, 86, 188, 147, 48, 131, 139, 24, 168, 20, 2, 36,
-            192, 32, 102, 24, 121, 135, 31, 56, 176, 29, 104, 226, 233,
+            118, 134, 137, 190, 242, 136, 104, 209, 162, 0, 118, 104, 192, 101, 108, 46, 90, 235,
+            191, 113, 120, 234, 221, 128, 110, 123, 67, 59, 205, 161, 140, 53,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -247,5 +247,25 @@ impl Instance {
     ) -> Result<Result<Vec<(u32, Enum1)>, ink_primitives::LangError>, E> {
         let data = vec![239, 4, 183, 13];
         conn.read(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_compact<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn: &C,
+    ) -> Result<Result<scale::Compact<u32>, ink_primitives::LangError>, E> {
+        let data = vec![182, 191, 237, 60];
+        conn.read(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn set_compact<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        &self,
+        conn: &C,
+        a_compact: scale::Compact<u32>,
+    ) -> Result<TxInfo, E> {
+        let mut data = vec![7, 191, 136, 2];
+        a_compact.encode_to(&mut data);
+        conn.exec(self.account_id, data).await
     }
 }

@@ -5,8 +5,8 @@ use genco::prelude::*;
 use ink_metadata::{ConstructorSpec, InkProject, MessageParamSpec, MessageSpec};
 use scale_info::TypeDefPrimitive;
 use scale_info::{
-    form::PortableForm, Field, Type, TypeDef, TypeDefArray, TypeDefComposite, TypeDefSequence,
-    TypeDefTuple, TypeDefVariant, Variant,
+    form::PortableForm, Field, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
+    TypeDefSequence, TypeDefTuple, TypeDefVariant, Variant,
 };
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -359,7 +359,8 @@ fn type_ref(id: u32, metadata: &InkProject) -> String {
         TypeDef::Variant(_) => type_ref_generic(typ, metadata),
         TypeDef::Array(array) => type_ref_array(array, metadata),
         TypeDef::Sequence(sequence) => type_ref_sequence(sequence, metadata),
-        _ => panic!("Unimplemented type: {:?}", typ),
+        TypeDef::Compact(compact) => type_ref_compact(compact, metadata),
+        TypeDef::BitSequence(_) => panic!("Bit sequences are not supported yet."),
     }
 }
 
@@ -427,6 +428,14 @@ fn type_ref_array(array: &TypeDefArray<PortableForm>, metadata: &InkProject) -> 
 /// Generates a type reference to a sequence type.
 fn type_ref_sequence(sequence: &TypeDefSequence<PortableForm>, metadata: &InkProject) -> String {
     format!("Vec<{}>", type_ref(sequence.type_param().id(), metadata))
+}
+
+/// Generates a type reference to a compact type.
+fn type_ref_compact(compact: &TypeDefCompact<PortableForm>, metadata: &InkProject) -> String {
+    format!(
+        "scale::Compact<{}>",
+        type_ref(compact.type_param().id(), metadata)
+    )
 }
 
 /// Resolves the type with the given ID.

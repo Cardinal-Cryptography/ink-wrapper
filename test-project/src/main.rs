@@ -30,6 +30,11 @@ async fn main() -> Result<()> {
     println!("{:?}", contract.get_array(&conn).await?);
     println!("{:?}", contract.set_sequence(&conn, vec![1, 2, 3]).await?);
     println!("{:?}", contract.get_sequence(&conn).await?);
+    println!(
+        "{:?}",
+        contract.set_compact(&conn, scale::Compact(42)).await?
+    );
+    println!("{:?}", contract.get_compact(&conn).await?);
 
     Ok(())
 }
