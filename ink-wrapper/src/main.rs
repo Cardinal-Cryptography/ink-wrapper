@@ -265,16 +265,22 @@ fn define_constructor(
     constructor: &ConstructorSpec<PortableForm>,
     metadata: &InkProject,
 ) -> rust::Tokens {
+    let conn = &new_name("conn", constructor.args());
+    let salt = &new_name("salt", constructor.args());
+    let data = &new_name("data", constructor.args());
+    let account_id = &new_name("account_id", constructor.args());
+    let code_hash_name = &new_name("code_hash", constructor.args());
+
     quote! {
         #[allow(dead_code)]
         pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
-            conn: &C,
-            salt: Vec<u8>,
+            $(conn): &C,
+            $(salt): Vec<u8>,
             $(message_args(&constructor.args, metadata))
         ) -> Result<Self, E> {
-            $(gather_args(constructor.selector().to_bytes(), constructor.args()))
-            let code_hash = $(format!("{:?}", hex_to_bytes(code_hash)));
-            let account_id = conn.instantiate(code_hash, salt, data).await?;
+            let $(data) = $(gather_args(constructor.selector().to_bytes(), constructor.args()));
+            let $(code_hash_name) = $(format!("{:?}", hex_to_bytes(code_hash)));
+            let $(account_id) = conn.instantiate($(code_hash_name), $(salt), $(data)).await?;
             Ok(Self { account_id })
         }
         $[ '\n' ]
@@ -292,16 +298,19 @@ fn define_message(message: &MessageSpec<PortableForm>, metadata: &InkProject) ->
 
 /// Generates a function wrapping a contract message that only reads from the contract.
 fn define_reader(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
+    let conn = &new_name("conn", message.args());
+    let data = &new_name("data", message.args());
+
     quote! {
         #[allow(dead_code)]
         pub async fn $(message.label())<E, C: ink_wrapper_types::Connection<E>>(
             &self,
-            conn: &C, $(message_args(message.args(), metadata))
+            $(conn): &C, $(message_args(message.args(), metadata))
         ) ->
             Result<$(type_ref(message.return_type().opt_type().unwrap().ty().id(), metadata)), E>
         {
-            $(gather_args(message.selector().to_bytes(), message.args()))
-            conn.read(self.account_id, data).await
+            let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
+            $(conn).read(self.account_id, $(data)).await
         }
 
         $[ '\n' ]
@@ -310,31 +319,41 @@ fn define_reader(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> 
 
 /// Generates a function wrapping a contract message that mutates the contract.
 fn define_mutator(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
+    let conn = &new_name("conn", message.args());
+    let data = &new_name("data", message.args());
+
     quote! {
         #[allow(dead_code)]
         pub async fn $(message.label())<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
-            &self, conn: &C,
+            &self, $(conn): &C,
             $(message_args(message.args(), metadata))
         ) -> Result<TxInfo, E>
         {
-            $(gather_args(message.selector().to_bytes(), message.args()))
-            conn.exec(self.account_id, data).await
+            let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
+            $(conn).exec(self.account_id, $(data)).await
         }
 
         $[ '\n' ]
     }
 }
 
-/// Generates a list of statesments that pack the selector and arguments into a SCALE encoded vector of bytes.
+/// Generates a block of statesments that pack the selector and arguments into a SCALE encoded vector of bytes.
+///
+/// The intention is to assign the result to a variable.
 fn gather_args(selector: &[u8], args: &[MessageParamSpec<PortableForm>]) -> rust::Tokens {
+    let data = &new_name("data", args);
+
     quote! {
         $(if args.len() == 0 {
-            let data = vec!$(format!("{:?}", &selector));
+            vec!$(format!("{:?}", &selector));
         } else {
-            let mut data = vec!$(format!("{:?}", &selector));
-            $(for arg in args {
-                $(arg.label()).encode_to(&mut data);
-            })
+            {
+                let mut $(data) = vec!$(format!("{:?}", &selector));
+                $(for arg in args {
+                    $(arg.label()).encode_to(&mut $(data));
+                })
+                $(data)
+            }
         })
     }
 }
@@ -447,4 +466,15 @@ fn resolve(metadata: &InkProject, id: u32) -> &Type<PortableForm> {
         .registry()
         .resolve(id)
         .unwrap_or_else(|| panic!("Type {} not found", id))
+}
+
+/// Generates a name not already used by one of the arguments.
+fn new_name(name: &str, args: &[MessageParamSpec<PortableForm>]) -> String {
+    let mut name = name.to_string();
+
+    while args.iter().any(|arg| arg.label() == &name) {
+        name.push('_');
+    }
+
+    name
 }

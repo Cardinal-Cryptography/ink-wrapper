@@ -172,5 +172,29 @@ mod test_contract {
         pub fn set_compact(&mut self, a_compact: Compact<u32>) {
             self.u32_val = a_compact.0;
         }
+
+        #[ink(message)]
+        pub fn get_forbidden_names(
+            &self,
+            conn: u32,
+            code_hash: u32,
+            data: u32,
+            salt: u32,
+            account_id: u32,
+        ) -> u32 {
+            conn + code_hash + data + salt + account_id
+        }
+
+        #[ink(message)]
+        pub fn set_forbidden_names(
+            &mut self,
+            conn: u32,
+            code_hash: u32,
+            data: u32,
+            salt: u32,
+            account_id: u32,
+        ) {
+            self.u32_val = conn + code_hash + data + salt + account_id;
+        }
     }
 }
