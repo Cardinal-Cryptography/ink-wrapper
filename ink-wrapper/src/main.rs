@@ -21,6 +21,7 @@ struct Args {
     metadata: String,
 }
 
+/// Struct for deserializing metadata.json that contains the fields not present in an InkProject.
 #[derive(Debug, Serialize, Deserialize)]
 struct Metadata {
     source: Source,
@@ -29,6 +30,56 @@ struct Metadata {
 #[derive(Debug, Serialize, Deserialize)]
 struct Source {
     hash: String,
+}
+
+trait TypeExtensions {
+    fn is_primitive(&self) -> bool;
+    fn is_ink(&self) -> bool;
+    fn is_builtin(&self) -> bool;
+    fn qualified_name(&self) -> String;
+}
+
+impl TypeExtensions for Type<PortableForm> {
+    /// Returns true if the type is a rust primitive.
+    fn is_primitive(&self) -> bool {
+        match self.type_def() {
+            scale_info::TypeDef::Primitive(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the type is defined in the ink! primitives crate.
+    fn is_ink(&self) -> bool {
+        self.path().segments().len() > 0 && self.path().segments()[0] == "ink_primitives"
+    }
+
+    /// Returns true if the type is a builtin type.
+    fn is_builtin(&self) -> bool {
+        self.path().segments().len() == 1
+    }
+
+    /// Returns the name by which the type can be referenced.
+    ///
+    /// It's the full path to the type for ink! types and just the name for other types. That's because any custom types
+    /// for the contract will be defined in the same module as the functions that use them.
+    fn qualified_name(&self) -> String {
+        if self.is_ink() {
+            self.path().segments().join("::")
+        } else {
+            self.path().segments().last().unwrap().to_string()
+        }
+    }
+}
+
+/// A type describing the fields of a struct or enum.
+///
+/// The typing on TypeDef does not guarantee that all fields are either named or unnamed, so we convert to this type
+/// first.
+enum Fields {
+    /// A type with named fields.
+    Named(Vec<(String, u32)>),
+    /// A type with unnamed fields.
+    Unnamed(Vec<u32>),
 }
 
 impl From<Vec<&Field<PortableForm>>> for Fields {
@@ -55,49 +106,7 @@ impl From<Vec<&Field<PortableForm>>> for Fields {
     }
 }
 
-trait TypeExtensions {
-    fn is_primitive(&self) -> bool;
-    fn is_ink(&self) -> bool;
-    fn is_builtin(&self) -> bool;
-    fn qualified_name(&self) -> String;
-}
-
-impl TypeExtensions for Type<PortableForm> {
-    fn is_primitive(&self) -> bool {
-        match self.type_def() {
-            scale_info::TypeDef::Primitive(_) => true,
-            _ => false,
-        }
-    }
-
-    fn is_ink(&self) -> bool {
-        self.path().segments().len() > 0 && self.path().segments()[0] == "ink_primitives"
-    }
-
-    fn is_builtin(&self) -> bool {
-        self.path().segments().len() == 1
-    }
-
-    fn qualified_name(&self) -> String {
-        if self.is_ink() {
-            self.path().segments().join("::")
-        } else {
-            self.path().segments().last().unwrap().to_string()
-        }
-    }
-}
-
-// impl TypeDef {
-//     fn is_primitive(&self) -> bool {
-//         matches!(self, TypeDef::Primitive { .. })
-//     }
-// }
-
-enum Fields {
-    Named(Vec<(String, u32)>),
-    Unnamed(Vec<u32>),
-}
-
+/// An extension trait that allows extraction of a [Fields] from the implementor.
 trait AggregateFields {
     fn aggregate_fields(&self) -> Fields;
 }
@@ -119,12 +128,6 @@ impl AggregateFields for TypeDefComposite<PortableForm> {
             .into()
     }
 }
-
-// impl Message {
-//     fn selector_bytes(&self) -> Vec<u8> {
-//         hex_to_bytes(&self.selector)
-//     }
-// }
 
 fn hex_to_bytes(hex: &str) -> Vec<u8> {
     hex::decode(hex.replace("0x", "")).unwrap()
@@ -150,6 +153,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+/// Generates the full wrapper for the contract.
 fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
     let encode = rust::import("scale", "Encode").with_alias("_");
 
@@ -184,6 +188,7 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
     }
 }
 
+/// Generates a type definition for a custom type used in the contract.
 fn define_type(typ: &Type<PortableForm>, metadata: &InkProject) -> rust::Tokens {
     match &typ.type_def() {
         TypeDef::Variant(variant) => define_variant(typ, variant, metadata),
@@ -192,6 +197,7 @@ fn define_type(typ: &Type<PortableForm>, metadata: &InkProject) -> rust::Tokens 
     }
 }
 
+/// Generates a type definition for an enum.
 fn define_variant(
     typ: &Type<PortableForm>,
     variant: &TypeDefVariant<PortableForm>,
@@ -223,6 +229,7 @@ fn define_variant(
     }
 }
 
+/// Generates a type definition for a struct.
 fn define_composite(
     typ: &Type<PortableForm>,
     composite: &TypeDefComposite<PortableForm>,
@@ -252,6 +259,7 @@ fn define_composite(
     }
 }
 
+/// Generates a function wrapping a contract constructor.
 fn define_constructor(
     code_hash: &str,
     constructor: &ConstructorSpec<PortableForm>,
@@ -273,6 +281,7 @@ fn define_constructor(
     }
 }
 
+/// Generates a function wrapping a contract message send.
 fn define_message(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
     if message.mutates() {
         define_mutator(message, metadata)
@@ -281,6 +290,7 @@ fn define_message(message: &MessageSpec<PortableForm>, metadata: &InkProject) ->
     }
 }
 
+/// Generates a function wrapping a contract message that only reads from the contract.
 fn define_reader(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
     quote! {
         #[allow(dead_code)]
@@ -298,6 +308,7 @@ fn define_reader(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> 
     }
 }
 
+/// Generates a function wrapping a contract message that mutates the contract.
 fn define_mutator(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
     quote! {
         #[allow(dead_code)]
@@ -314,6 +325,7 @@ fn define_mutator(message: &MessageSpec<PortableForm>, metadata: &InkProject) ->
     }
 }
 
+/// Generates a list of statesments that pack the selector and arguments into a SCALE encoded vector of bytes.
 fn gather_args(selector: &[u8], args: &[MessageParamSpec<PortableForm>]) -> rust::Tokens {
     quote! {
         $(if args.len() == 0 {
@@ -327,6 +339,7 @@ fn gather_args(selector: &[u8], args: &[MessageParamSpec<PortableForm>]) -> rust
     }
 }
 
+/// Generates a list of arguments for a constructor/message wrapper.
 fn message_args(args: &[MessageParamSpec<PortableForm>], metadata: &InkProject) -> rust::Tokens {
     quote! {
         $(for arg in args {
@@ -335,6 +348,7 @@ fn message_args(args: &[MessageParamSpec<PortableForm>], metadata: &InkProject) 
     }
 }
 
+/// Generates a type reference to the given type (for example to use as an argument type, return type, etc.).
 fn type_ref(id: u32, metadata: &InkProject) -> String {
     let typ = resolve(metadata, id);
 
@@ -347,13 +361,7 @@ fn type_ref(id: u32, metadata: &InkProject) -> String {
     }
 }
 
-fn resolve(metadata: &InkProject, id: u32) -> &Type<PortableForm> {
-    metadata
-        .registry()
-        .resolve(id)
-        .unwrap_or_else(|| panic!("Type {} not found", id))
-}
-
+/// Generates a type reference to a (potentially generic) type by name.
 fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject) -> String {
     let mut generics = String::new();
     let mut first = true;
@@ -371,6 +379,7 @@ fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject) -> String {
     format!("{}<{}>", typ.qualified_name(), generics)
 }
 
+/// Generates a type reference to a primitive type.
 fn type_ref_primitive(primitive: &TypeDefPrimitive) -> String {
     match primitive {
         TypeDefPrimitive::U8 => "u8".to_string(),
@@ -390,6 +399,8 @@ fn type_ref_primitive(primitive: &TypeDefPrimitive) -> String {
         TypeDefPrimitive::Str => "String".to_string(),
     }
 }
+
+/// Generates a type reference to a tuple type.
 fn type_ref_tuple(tuple: &TypeDefTuple<PortableForm>, metadata: &InkProject) -> String {
     format!(
         "({})",
@@ -400,4 +411,15 @@ fn type_ref_tuple(tuple: &TypeDefTuple<PortableForm>, metadata: &InkProject) -> 
             .collect::<Vec<_>>()
             .join(", ")
     )
+}
+
+/// Resolves the type with the given ID.
+///
+/// Panics if the type cannot be found in the metadata. We should only use types that are mentioned in the metadata
+/// file, so any type that cannot be found is a bug in the code generator or the metadata file.
+fn resolve(metadata: &InkProject, id: u32) -> &Type<PortableForm> {
+    metadata
+        .registry()
+        .resolve(id)
+        .unwrap_or_else(|| panic!("Type {} not found", id))
 }
