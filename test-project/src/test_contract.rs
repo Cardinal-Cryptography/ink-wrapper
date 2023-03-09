@@ -48,8 +48,8 @@ impl Instance {
         an_u32.encode_to(&mut data);
         a_bool.encode_to(&mut data);
         let code_hash = [
-            17, 67, 208, 109, 251, 117, 177, 58, 35, 196, 231, 230, 116, 158, 185, 43, 98, 86, 245,
-            56, 23, 32, 102, 96, 228, 229, 219, 9, 103, 212, 125, 253,
+            118, 134, 137, 190, 242, 136, 104, 209, 162, 0, 118, 104, 192, 101, 108, 46, 90, 235,
+            191, 113, 120, 234, 221, 128, 110, 123, 67, 59, 205, 161, 140, 53,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -62,8 +62,8 @@ impl Instance {
     ) -> Result<Self, E> {
         let data = vec![237, 75, 157, 27];
         let code_hash = [
-            17, 67, 208, 109, 251, 117, 177, 58, 35, 196, 231, 230, 116, 158, 185, 43, 98, 86, 245,
-            56, 23, 32, 102, 96, 228, 229, 219, 9, 103, 212, 125, 253,
+            118, 134, 137, 190, 242, 136, 104, 209, 162, 0, 118, 104, 192, 101, 108, 46, 90, 235,
+            191, 113, 120, 234, 221, 128, 110, 123, 67, 59, 205, 161, 140, 53,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -206,6 +206,66 @@ impl Instance {
     ) -> Result<TxInfo, E> {
         let mut data = vec![157, 123, 31, 26];
         a_newtype1.encode_to(&mut data);
+        conn.exec(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn set_array<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        &self,
+        conn: &C,
+        an_array: [u32; 3],
+    ) -> Result<TxInfo, E> {
+        let mut data = vec![165, 155, 148, 100];
+        an_array.encode_to(&mut data);
+        conn.exec(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_array<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn: &C,
+    ) -> Result<Result<[(u32, Enum1); 2], ink_primitives::LangError>, E> {
+        let data = vec![227, 168, 189, 83];
+        conn.read(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn set_sequence<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        &self,
+        conn: &C,
+        a_sequence: Vec<u32>,
+    ) -> Result<TxInfo, E> {
+        let mut data = vec![193, 251, 97, 55];
+        a_sequence.encode_to(&mut data);
+        conn.exec(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_sequence<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn: &C,
+    ) -> Result<Result<Vec<(u32, Enum1)>, ink_primitives::LangError>, E> {
+        let data = vec![239, 4, 183, 13];
+        conn.read(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_compact<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn: &C,
+    ) -> Result<Result<scale::Compact<u32>, ink_primitives::LangError>, E> {
+        let data = vec![182, 191, 237, 60];
+        conn.read(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn set_compact<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
+        &self,
+        conn: &C,
+        a_compact: scale::Compact<u32>,
+    ) -> Result<TxInfo, E> {
+        let mut data = vec![7, 191, 136, 2];
+        a_compact.encode_to(&mut data);
         conn.exec(self.account_id, data).await
     }
 }

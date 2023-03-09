@@ -4,6 +4,8 @@
 mod test_contract {
     #[cfg(feature = "std")]
     use ink::storage::traits::StorageLayout;
+    use ink::{prelude::vec, prelude::vec::Vec};
+    use scale::Compact;
 
     #[ink(storage)]
     #[derive(Default)]
@@ -136,6 +138,39 @@ mod test_contract {
         #[ink(message)]
         pub fn set_newtype1(&mut self, a_newtype1: NewType1) {
             self.newtype1_val = a_newtype1;
+        }
+
+        #[ink(message)]
+        pub fn set_array(&mut self, an_array: [u32; 3]) {
+            self.u32_val = an_array[0];
+        }
+
+        #[ink(message)]
+        pub fn get_array(&self) -> [(u32, Enum1); 2] {
+            [
+                (self.u32_val, self.enum1_val),
+                (self.u32_val, self.enum1_val),
+            ]
+        }
+
+        #[ink(message)]
+        pub fn set_sequence(&mut self, a_sequence: Vec<u32>) {
+            self.u32_val = a_sequence[0];
+        }
+
+        #[ink(message)]
+        pub fn get_sequence(&self) -> Vec<(u32, Enum1)> {
+            vec![(self.u32_val, self.enum1_val); 2]
+        }
+
+        #[ink(message)]
+        pub fn get_compact(&self) -> Compact<u32> {
+            Compact(self.u32_val)
+        }
+
+        #[ink(message)]
+        pub fn set_compact(&mut self, a_compact: Compact<u32>) {
+            self.u32_val = a_compact.0;
         }
     }
 }
