@@ -37,6 +37,8 @@ impl From<ink_primitives::AccountId> for Instance {
 }
 
 impl Instance {
+    /// Example docs for a constructor.
+    /// They are multiline.
     #[allow(dead_code)]
     pub async fn new<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
         conn: &C,
@@ -72,6 +74,8 @@ impl Instance {
         Ok(Self { account_id })
     }
 
+    ///  Example docs for a message.
+    ///  They are multiline.
     #[allow(dead_code)]
     pub async fn get_u32<E, C: ink_wrapper_types::Connection<E>>(
         &self,

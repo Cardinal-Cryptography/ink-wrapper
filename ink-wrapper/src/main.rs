@@ -272,6 +272,7 @@ fn define_constructor(
     let code_hash_name = &new_name("code_hash", constructor.args());
 
     quote! {
+        $(docs(constructor.docs()))
         #[allow(dead_code)]
         pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
             $(conn): &C,
@@ -302,6 +303,7 @@ fn define_reader(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> 
     let data = &new_name("data", message.args());
 
     quote! {
+        $(docs(message.docs()))
         #[allow(dead_code)]
         pub async fn $(message.label())<E, C: ink_wrapper_types::Connection<E>>(
             &self,
@@ -323,6 +325,7 @@ fn define_mutator(message: &MessageSpec<PortableForm>, metadata: &InkProject) ->
     let data = &new_name("data", message.args());
 
     quote! {
+        $(docs(message.docs()))
         #[allow(dead_code)]
         pub async fn $(message.label())<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
             &self, $(conn): &C,
@@ -455,6 +458,15 @@ fn type_ref_compact(compact: &TypeDefCompact<PortableForm>, metadata: &InkProjec
         "scale::Compact<{}>",
         type_ref(compact.type_param().id(), metadata)
     )
+}
+
+/// Generates a docstring from a list of doc lines.
+fn docs(lines: &[String]) -> String {
+    lines
+        .iter()
+        .map(|line| format!("/// {}", line))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// Resolves the type with the given ID.

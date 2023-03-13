@@ -54,6 +54,8 @@ mod test_contract {
     type NewType1 = u32;
 
     impl TestContract {
+        /// Example docs for a constructor.
+        /// They are multiline.
         #[ink(constructor)]
         pub fn new(an_u32: u32, a_bool: bool) -> Self {
             Self {
@@ -70,6 +72,8 @@ mod test_contract {
             }
         }
 
+        /// Example docs for a message.
+        /// They are multiline.
         #[ink(message)]
         pub fn get_u32(&self) -> u32 {
             self.u32_val
