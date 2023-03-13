@@ -44,12 +44,15 @@ impl Instance {
         an_u32: u32,
         a_bool: bool,
     ) -> Result<Self, E> {
-        let mut data = vec![155, 174, 157, 94];
-        an_u32.encode_to(&mut data);
-        a_bool.encode_to(&mut data);
+        let data = {
+            let mut data = vec![155, 174, 157, 94];
+            an_u32.encode_to(&mut data);
+            a_bool.encode_to(&mut data);
+            data
+        };
         let code_hash = [
-            118, 134, 137, 190, 242, 136, 104, 209, 162, 0, 118, 104, 192, 101, 108, 46, 90, 235,
-            191, 113, 120, 234, 221, 128, 110, 123, 67, 59, 205, 161, 140, 53,
+            41, 2, 122, 125, 224, 108, 110, 209, 243, 246, 117, 145, 214, 14, 89, 13, 162, 122,
+            197, 124, 57, 21, 90, 127, 101, 94, 152, 68, 215, 159, 216, 127,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -62,8 +65,8 @@ impl Instance {
     ) -> Result<Self, E> {
         let data = vec![237, 75, 157, 27];
         let code_hash = [
-            118, 134, 137, 190, 242, 136, 104, 209, 162, 0, 118, 104, 192, 101, 108, 46, 90, 235,
-            191, 113, 120, 234, 221, 128, 110, 123, 67, 59, 205, 161, 140, 53,
+            41, 2, 122, 125, 224, 108, 110, 209, 243, 246, 117, 145, 214, 14, 89, 13, 162, 122,
+            197, 124, 57, 21, 90, 127, 101, 94, 152, 68, 215, 159, 216, 127,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
@@ -138,8 +141,11 @@ impl Instance {
         conn: &C,
         an_u32: u32,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![246, 7, 184, 246];
-        an_u32.encode_to(&mut data);
+        let data = {
+            let mut data = vec![246, 7, 184, 246];
+            an_u32.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -149,8 +155,11 @@ impl Instance {
         conn: &C,
         a_bool: bool,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![33, 77, 141, 9];
-        a_bool.encode_to(&mut data);
+        let data = {
+            let mut data = vec![33, 77, 141, 9];
+            a_bool.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -160,8 +169,11 @@ impl Instance {
         conn: &C,
         a_struct1: Struct1,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![148, 223, 7, 132];
-        a_struct1.encode_to(&mut data);
+        let data = {
+            let mut data = vec![148, 223, 7, 132];
+            a_struct1.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -171,8 +183,11 @@ impl Instance {
         conn: &C,
         an_enum1: Enum1,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![143, 146, 36, 76];
-        an_enum1.encode_to(&mut data);
+        let data = {
+            let mut data = vec![143, 146, 36, 76];
+            an_enum1.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -182,8 +197,11 @@ impl Instance {
         conn: &C,
         a_struct2: Struct2,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![147, 42, 93, 250];
-        a_struct2.encode_to(&mut data);
+        let data = {
+            let mut data = vec![147, 42, 93, 250];
+            a_struct2.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -193,8 +211,11 @@ impl Instance {
         conn: &C,
         an_enum2: Enum2,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![254, 6, 195, 111];
-        an_enum2.encode_to(&mut data);
+        let data = {
+            let mut data = vec![254, 6, 195, 111];
+            an_enum2.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -204,8 +225,11 @@ impl Instance {
         conn: &C,
         a_newtype1: u32,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![157, 123, 31, 26];
-        a_newtype1.encode_to(&mut data);
+        let data = {
+            let mut data = vec![157, 123, 31, 26];
+            a_newtype1.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -215,8 +239,11 @@ impl Instance {
         conn: &C,
         an_array: [u32; 3],
     ) -> Result<TxInfo, E> {
-        let mut data = vec![165, 155, 148, 100];
-        an_array.encode_to(&mut data);
+        let data = {
+            let mut data = vec![165, 155, 148, 100];
+            an_array.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -235,8 +262,11 @@ impl Instance {
         conn: &C,
         a_sequence: Vec<u32>,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![193, 251, 97, 55];
-        a_sequence.encode_to(&mut data);
+        let data = {
+            let mut data = vec![193, 251, 97, 55];
+            a_sequence.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
     }
 
@@ -264,8 +294,59 @@ impl Instance {
         conn: &C,
         a_compact: scale::Compact<u32>,
     ) -> Result<TxInfo, E> {
-        let mut data = vec![7, 191, 136, 2];
-        a_compact.encode_to(&mut data);
+        let data = {
+            let mut data = vec![7, 191, 136, 2];
+            a_compact.encode_to(&mut data);
+            data
+        };
         conn.exec(self.account_id, data).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_forbidden_names<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn_: &C,
+        conn: u32,
+        code_hash: u32,
+        data: u32,
+        salt: u32,
+        account_id: u32,
+    ) -> Result<Result<u32, ink_primitives::LangError>, E> {
+        let data_ = {
+            let mut data_ = vec![133, 182, 196, 150];
+            conn.encode_to(&mut data_);
+            code_hash.encode_to(&mut data_);
+            data.encode_to(&mut data_);
+            salt.encode_to(&mut data_);
+            account_id.encode_to(&mut data_);
+            data_
+        };
+        conn_.read(self.account_id, data_).await
+    }
+
+    #[allow(dead_code)]
+    pub async fn set_forbidden_names<
+        TxInfo,
+        E,
+        C: ink_wrapper_types::SignedConnection<TxInfo, E>,
+    >(
+        &self,
+        conn_: &C,
+        conn: u32,
+        code_hash: u32,
+        data: u32,
+        salt: u32,
+        account_id: u32,
+    ) -> Result<TxInfo, E> {
+        let data_ = {
+            let mut data_ = vec![234, 20, 101, 38];
+            conn.encode_to(&mut data_);
+            code_hash.encode_to(&mut data_);
+            data.encode_to(&mut data_);
+            salt.encode_to(&mut data_);
+            account_id.encode_to(&mut data_);
+            data_
+        };
+        conn_.exec(self.account_id, data_).await
     }
 }

@@ -35,6 +35,14 @@ async fn main() -> Result<()> {
         contract.set_compact(&conn, scale::Compact(42)).await?
     );
     println!("{:?}", contract.get_compact(&conn).await?);
+    println!(
+        "{:?}",
+        contract.set_forbidden_names(&conn, 1, 2, 3, 4, 5).await?
+    );
+    println!(
+        "{:?}",
+        contract.get_forbidden_names(&conn, 1, 2, 3, 4, 5).await?
+    );
 
     Ok(())
 }
