@@ -1,0 +1,32 @@
+---
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build a single node chain image
+        run: |
+          docker build --tag aleph-onenode-chain \
+            --file ci/Dockerfile.aleph-node ci
+
+      - name: Start a single node chain
+        run: |
+          docker run --detach --rm --network host \
+            aleph-onenode-chain
+
+      - name: Run the test script
+        run: |
+          docker run --rm --network host \
+            --mount type=bind,source="$(pwd)",target=/code \
+            --workdir /code \
+            public.ecr.aws/p6e8q1z1/ink-dev:1.0.0 \
+            ci/test.sh
