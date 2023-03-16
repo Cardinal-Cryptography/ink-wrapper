@@ -8,7 +8,8 @@ build-node:
 	docker build --tag aleph-onenode-chain --file ci/Dockerfile.aleph-node ci
 
 run-node: build-node
-	docker run --detach --rm --network host aleph-onenode-chain
+	docker run --detach --rm --network host aleph-onenode-chain \
+		--name ink-wrapper-builder
 
 test_contract:
 	cd test_contract && cargo contract build --release
@@ -34,6 +35,7 @@ all-dockerized: run-node build-builder
 		--user "$(shell id -u):$(shell id -g)" \
 		--volume "$(shell pwd)":/code \
 		--workdir /code \
+		--name ink-wrapper-builder \
 		ink-builder \
 		make all
 
@@ -41,3 +43,6 @@ tooling:
 	rustup component add rustfmt clippy
 
 all: tooling check-ink-wrapper check-test-project test
+
+kill:
+	docker kill ink-wrapper-builder ink-wrapper-node
