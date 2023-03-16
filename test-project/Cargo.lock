@@ -4038,7 +4038,6 @@ dependencies = [
  "ink_primitives",
  "parity-scale-codec",
  "rand 0.8.5",
- "scale-info",
  "sp-core 16.0.0",
  "tokio",
 ]

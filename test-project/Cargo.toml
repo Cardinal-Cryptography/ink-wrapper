@@ -11,7 +11,6 @@ edition = "2021"
 
 ink-wrapper-types = { path = "../ink-wrapper-types" }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
 # aleph_client version equal to the one used in ink-wrapper-types
 
