@@ -42,15 +42,12 @@ trait TypeExtensions {
 impl TypeExtensions for Type<PortableForm> {
     /// Returns true if the type is a rust primitive.
     fn is_primitive(&self) -> bool {
-        match self.type_def() {
-            scale_info::TypeDef::Primitive(_) => true,
-            _ => false,
-        }
+        matches!(self.type_def(), scale_info::TypeDef::Primitive(_))
     }
 
     /// Returns true if the type is defined in the ink! primitives crate.
     fn is_ink(&self) -> bool {
-        self.path().segments().len() > 0 && self.path().segments()[0] == "ink_primitives"
+        !self.path().segments().is_empty() && self.path().segments()[0] == "ink_primitives"
     }
 
     /// Returns true if the type is a builtin type.
@@ -347,7 +344,7 @@ fn gather_args(selector: &[u8], args: &[MessageParamSpec<PortableForm>]) -> rust
     let data = &new_name("data", args);
 
     quote! {
-        $(if args.len() == 0 {
+        $(if args.is_empty() {
             vec!$(format!("{:?}", &selector));
         } else {
             {

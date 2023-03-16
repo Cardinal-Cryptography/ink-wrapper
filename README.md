@@ -2,18 +2,21 @@
 
 ## CI
 
-You should be able to run the CI processes locally with https://github.com/nektos/act:
+Use the commands provided in the `Makefile` to replicate the build process run on CI. The most hassle-free is to just
+run everything in docker:
 
 ```bash
-$ act -v
+make all-dockerized
 ```
 
-Note that if you have docker installed in rootless mode you might need to provide the socket to `act` manually,
-something like:
+If you have the tooling installed on your host and start a node yourself, you can also run the build on your host:
 
 ```bash
-$ act -v --container-daemon-socket $DOCKER_HOST
+make all
 ```
 
-Alternatively, see `.github/workflows/ci.yml` for the dockerized steps taken and customize for yourself (such as
-starting permanent containers to run the steps in) to speed up the feedback loop locally.
+In case there are any runaway containers from `all-dockerized` you can kill them:
+
+```bash
+make kill
+```
