@@ -31,6 +31,7 @@ check-test-project:
 
 all-dockerized: run-node build-builder
 	docker run --rm --network host \
+		--user "$(shell id -u):$(shell id -g)" \
 		--mount type=bind,source="$(shell pwd)",target=/code \
 		--workdir /code \
 		ink-builder \
