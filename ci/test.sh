@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+rustup component add rustfmt clippy
+
 pushd test_contract
 cargo contract build --release
 cargo contract upload --suri //Alice --url ws://localhost:9944 || true
@@ -18,4 +20,3 @@ cargo clippy --all-features -- --no-deps -D warnings
 cargo test
 cargo run
 popd
-
