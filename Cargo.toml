@@ -1,0 +1,11 @@
+[workspace]
+
+members = [
+  "ink-wrapper-types",
+  "ink-wrapper",
+]
+
+exclude = [
+  "test_contract",
+  "test-project",
+]
