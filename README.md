@@ -8,7 +8,7 @@
 Install the tool from [crates.io](https://crates.io):
 
 ```bash
-cargo install ink-wrapper
+cargo install --git https://github.com/Cardinal-Cryptography/ink-wrapper ink-wrapper
 ```
 
 ## Usage
@@ -45,7 +45,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 # for actually making calls. Otherwise, you will need to implement `ink_wrapper_types::Connection` and
 # `ink_wrapper_types::SignedConnection` yourself.
 
-aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "0bf23c86fd3ada6a72928b2e019b8eba46430368" }
+aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "r-10.0" }
 ```
 
 With that, you're ready to use the wrappers in your code. The generated module will have an `Instance` struct that
