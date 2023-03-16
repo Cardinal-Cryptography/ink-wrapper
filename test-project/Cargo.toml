@@ -11,15 +11,14 @@ edition = "2021"
 
 ink-wrapper-types = { path = "../ink-wrapper-types" }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
+ink_primitives = "4.0.1"
 
 # aleph_client version equal to the one used in ink-wrapper-types
 
-aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "0bf23c86fd3ada6a72928b2e019b8eba46430368" }
+aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "r-10.0" }
 
 # Other dependencies
 
-ink_primitives = "4.0.0-beta.1"
 async-trait = "0.1.64"
 anyhow = "1.0.69"
 tokio = "1.25.0"
