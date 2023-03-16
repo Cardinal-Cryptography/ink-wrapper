@@ -8,7 +8,7 @@
 Install the tool from [crates.io](https://crates.io):
 
 ```bash
-cargo install ink-wrapper
+cargo install --git https://github.com/Cardinal-Cryptography/ink-wrapper ink-wrapper
 ```
 
 ## Usage
@@ -37,7 +37,7 @@ mod test_contract;
 
 You will need the following dependencies for the wrapper to work:
 
-```toml
+```rust
 ink-wrapper-types = "0.1.0"
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 ink_primitives = "4.0.1"
