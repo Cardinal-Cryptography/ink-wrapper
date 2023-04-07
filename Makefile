@@ -20,7 +20,7 @@ test_contract.rs: test_contract
 		| rustfmt --edition 2021 > ../test-project/src/test_contract.rs
 
 test: test_contract.rs
-	cd test-project && cargo run
+	cd test-project && cargo test
 
 check-ink-wrapper:
 	cd ink-wrapper && cargo fmt --all --check

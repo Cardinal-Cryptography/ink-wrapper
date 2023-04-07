@@ -1,10 +1,9 @@
-mod test_contract;
-
+use crate::test_contract;
 use anyhow::Result;
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
 
-#[tokio::main(flavor = "current_thread")]
+#[tokio::test]
 async fn main() -> Result<()> {
     let conn = aleph_client::Connection::new("ws://localhost:9944").await;
     let alice = aleph_client::keypair_from_string("//Alice");
