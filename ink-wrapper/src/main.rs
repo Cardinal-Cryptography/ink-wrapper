@@ -174,6 +174,7 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             })
         })
 
+        #[derive(Debug, Clone, Copy)]
         pub struct Instance {
             account_id: ink_primitives::AccountId,
         }
@@ -181,6 +182,12 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
         impl From<ink_primitives::AccountId> for Instance {
             fn from(account_id: ink_primitives::AccountId) -> Self {
                 Self { account_id }
+            }
+        }
+
+        impl From<Instance> for ink_primitives::AccountId {
+            fn from(instance: Instance) -> Self {
+                instance.account_id
             }
         }
 
