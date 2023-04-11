@@ -26,6 +26,7 @@ pub enum Enum2 {
     },
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Instance {
     account_id: ink_primitives::AccountId,
 }
@@ -33,6 +34,12 @@ pub struct Instance {
 impl From<ink_primitives::AccountId> for Instance {
     fn from(account_id: ink_primitives::AccountId) -> Self {
         Self { account_id }
+    }
+}
+
+impl From<Instance> for ink_primitives::AccountId {
+    fn from(instance: Instance) -> Self {
+        instance.account_id
     }
 }
 
@@ -67,11 +74,25 @@ impl Instance {
     ) -> Result<Self, E> {
         let data = vec![237, 75, 157, 27];
         let code_hash = [
-            175, 190, 2, 39, 246, 101, 99, 93, 122, 83, 182, 185, 58, 200, 206, 0, 165, 35, 80,
-            165, 236, 104, 71, 1, 209, 118, 81, 181, 11, 118, 60, 215,
+            43, 211, 100, 85, 17, 83, 10, 10, 215, 218, 87, 146, 205, 104, 105, 116, 159, 180, 183,
+            38, 139, 127, 137, 136, 170, 253, 76, 28, 7, 82, 61, 177,
         ];
         let account_id = conn.instantiate(code_hash, salt, data).await?;
         Ok(Self { account_id })
+    }
+
+    #[allow(dead_code)]
+    pub async fn get_account_id<E, C: ink_wrapper_types::Connection<E>>(
+        &self,
+        conn: &C,
+        account_id: ink_primitives::AccountId,
+    ) -> Result<Result<ink_primitives::AccountId, ink_primitives::LangError>, E> {
+        let data = {
+            let mut data = vec![121, 113, 133, 70];
+            account_id.encode_to(&mut data);
+            data
+        };
+        conn.read(self.account_id, data).await
     }
 
     ///  Example docs for a message.

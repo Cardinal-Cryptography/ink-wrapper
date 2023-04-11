@@ -26,7 +26,7 @@ check-ink-wrapper:
 	cd ink-wrapper && cargo fmt --all --check
 	cd ink-wrapper && cargo clippy --all-features -- --no-deps -D warnings
 
-check-test-project:
+check-test-project: test_contract.rs
 	cd test-project && cargo fmt --all --check
 	cd test-project && cargo clippy --all-features -- --no-deps -D warnings
 

@@ -35,6 +35,7 @@ struct Source {
 trait TypeExtensions {
     fn is_primitive(&self) -> bool;
     fn is_ink(&self) -> bool;
+    fn is_ink_types(&self) -> bool;
     fn is_builtin(&self) -> bool;
     fn qualified_name(&self) -> String;
 }
@@ -45,9 +46,17 @@ impl TypeExtensions for Type<PortableForm> {
         matches!(self.type_def(), scale_info::TypeDef::Primitive(_))
     }
 
-    /// Returns true if the type is defined in the ink! primitives crate.
+    /// Returns true if the type is defined in the ink_primitives crate.
     fn is_ink(&self) -> bool {
         !self.path().segments().is_empty() && self.path().segments()[0] == "ink_primitives"
+    }
+
+    /// Returns true if the type is defined in the ink_primitives crate's private types module. These types are
+    /// reexported at the top level in ink_primitives.
+    fn is_ink_types(&self) -> bool {
+        self.path().segments().len() > 2
+            && self.path().segments()[0] == "ink_primitives"
+            && self.path().segments()[1] == "types"
     }
 
     /// Returns true if the type is a builtin type.
@@ -60,7 +69,9 @@ impl TypeExtensions for Type<PortableForm> {
     /// It's the full path to the type for ink! types and just the name for other types. That's because any custom types
     /// for the contract will be defined in the same module as the functions that use them.
     fn qualified_name(&self) -> String {
-        if self.is_ink() {
+        if self.is_ink_types() {
+            ["ink_primitives", self.path().segments().last().unwrap()].join("::")
+        } else if self.is_ink() {
             self.path().segments().join("::")
         } else {
             self.path().segments().last().unwrap().to_string()
@@ -163,6 +174,7 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             })
         })
 
+        #[derive(Debug, Clone, Copy)]
         pub struct Instance {
             account_id: ink_primitives::AccountId,
         }
@@ -170,6 +182,12 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
         impl From<ink_primitives::AccountId> for Instance {
             fn from(account_id: ink_primitives::AccountId) -> Self {
                 Self { account_id }
+            }
+        }
+
+        impl From<Instance> for ink_primitives::AccountId {
+            fn from(instance: Instance) -> Self {
+                instance.account_id
             }
         }
 
