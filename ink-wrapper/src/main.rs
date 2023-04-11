@@ -165,6 +165,8 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
     let encode = rust::import("scale", "Encode").with_alias("_");
 
     quote! {
+        $("// This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).")
+
         $(register(encode))
 
         $(for typ in metadata.registry().types() {
@@ -287,7 +289,7 @@ fn define_constructor(
 
     quote! {
         $(docs(constructor.docs()))
-        #[allow(dead_code)]
+        #[allow(dead_code, clippy::too_many_arguments)]
         pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
             $(conn): &C,
             $(salt): Vec<u8>,
@@ -318,7 +320,7 @@ fn define_reader(message: &MessageSpec<PortableForm>, metadata: &InkProject) -> 
 
     quote! {
         $(docs(message.docs()))
-        #[allow(dead_code)]
+        #[allow(dead_code, clippy::too_many_arguments)]
         pub async fn $(message.label())<E, C: ink_wrapper_types::Connection<E>>(
             &self,
             $(conn): &C, $(message_args(message.args(), metadata))
@@ -340,7 +342,7 @@ fn define_mutator(message: &MessageSpec<PortableForm>, metadata: &InkProject) ->
 
     quote! {
         $(docs(message.docs()))
-        #[allow(dead_code)]
+        #[allow(dead_code, clippy::too_many_arguments)]
         pub async fn $(message.label())<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
             &self, $(conn): &C,
             $(message_args(message.args(), metadata))
