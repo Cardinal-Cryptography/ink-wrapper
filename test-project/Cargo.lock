@@ -4209,6 +4209,7 @@ dependencies = [
  "async-trait",
  "ink-wrapper-types",
  "ink_primitives",
+ "once_cell",
  "parity-scale-codec",
  "rand 0.8.5",
  "sp-core 16.0.0",

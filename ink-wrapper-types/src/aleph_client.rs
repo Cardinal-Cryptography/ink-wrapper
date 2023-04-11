@@ -3,15 +3,12 @@ use aleph_client::{
     sp_weights::weight_v2::Weight,
     AsConnection, Balance, CodeHash, ConnectionApi, SignedConnectionApi, TxInfo, TxStatus,
 };
-use anyhow::Error;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use async_trait::async_trait;
 use ink_primitives::AccountId;
-use pallet_contracts_primitives::ContractExecResult;
-use pallet_contracts_primitives::ContractInstantiateResult;
+use pallet_contracts_primitives::{ContractExecResult, ContractInstantiateResult};
 use scale::Encode;
-use subxt::ext::sp_core::Bytes;
-use subxt::rpc_params;
+use subxt::{ext::sp_core::Bytes, rpc_params};
 
 #[derive(Encode)]
 struct InstantiateRequest {

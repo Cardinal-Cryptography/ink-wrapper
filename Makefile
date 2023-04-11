@@ -8,8 +8,9 @@ build-node:
 	docker build --tag aleph-onenode-chain --file ci/Dockerfile.aleph-node ci
 
 run-node: build-node
-	docker run --detach --rm --network host aleph-onenode-chain \
-		--name ink-wrapper-builder
+	docker run --detach --rm --network host \
+		--name ink-wrapper-node \
+		aleph-onenode-chain
 
 test_contract:
 	cd test_contract && cargo contract build --release

@@ -1,20 +1,47 @@
-use crate::test_contract;
-use aleph_client::SignedConnection;
+use std::sync::Mutex;
+
+use aleph_client::{pallets::balances::BalanceUserApi, KeyPair, SignedConnection, TxStatus};
 use anyhow::Result;
 use assert2::assert;
+use once_cell::sync::Lazy;
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
 
+use crate::test_contract;
+
+static AUTHORITY_MUTEX: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
+
 async fn connect_and_deploy() -> Result<(SignedConnection, test_contract::Instance)> {
+    let guard = AUTHORITY_MUTEX.lock().unwrap();
+
     let conn = aleph_client::Connection::new("ws://localhost:9944").await;
     let alice = aleph_client::keypair_from_string("//Alice");
-    let conn = aleph_client::SignedConnection::from_connection(conn.clone(), alice);
+    let test_account = random_account();
 
+    aleph_client::SignedConnection::from_connection(conn.clone(), alice)
+        .transfer(
+            test_account.account_id().clone(),
+            alephs(100),
+            TxStatus::InBlock,
+        )
+        .await?;
+
+    drop(guard);
+
+    let conn = aleph_client::SignedConnection::from_connection(conn, test_account);
     let mut salt = vec![0; 32];
     rand::thread_rng().fill_bytes(&mut salt);
     let contract = test_contract::Instance::default(&conn, salt).await?;
 
     Ok((conn, contract))
+}
+
+fn alephs(n: u128) -> aleph_client::Balance {
+    n * 1_000_000_000_000
+}
+
+fn random_account() -> KeyPair {
+    aleph_client::keypair_from_string(&format!("//TestAccount/{}", rand::thread_rng().next_u64()))
 }
 
 #[tokio::test]
