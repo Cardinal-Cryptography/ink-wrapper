@@ -1,2 +1,3 @@
 **/target
 test-project/src/test_contract.rs
+ink-wrapper-types/Cargo.lock

@@ -3,6 +3,7 @@ use std::sync::Mutex;
 use aleph_client::{pallets::balances::BalanceUserApi, KeyPair, SignedConnection, TxStatus};
 use anyhow::Result;
 use assert2::assert;
+use ink_primitives::AccountId;
 use once_cell::sync::Lazy;
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
@@ -113,6 +114,19 @@ async fn test_messages_with_clashing_argument_names() -> Result<()> {
             .unwrap()
             == 1 + 2 + 3 + 4 + 5
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_conversion_to_account_id() -> Result<()> {
+    let (conn, contract) = connect_and_deploy().await?;
+    contract.set_u32(&conn, 12345).await?;
+
+    let account_id: AccountId = contract.into();
+    let contract: test_contract::Instance = account_id.into();
+
+    assert!(contract.get_u32(&conn).await?.unwrap() == 12345);
 
     Ok(())
 }
