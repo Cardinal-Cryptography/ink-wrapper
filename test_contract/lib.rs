@@ -72,6 +72,11 @@ mod test_contract {
             }
         }
 
+        #[ink(message)]
+        pub fn get_account_id(&self, account_id: AccountId) -> AccountId {
+            account_id
+        }
+
         /// Example docs for a message.
         /// They are multiline.
         #[ink(message)]
