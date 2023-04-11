@@ -166,6 +166,8 @@ fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
     let encode = rust::import("scale", "Encode").with_alias("_");
 
     quote! {
+        $("// This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).")
+
         $(register(encode))
 
         $(for typ in metadata.registry().types() {

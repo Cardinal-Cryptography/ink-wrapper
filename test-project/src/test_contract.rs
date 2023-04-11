@@ -1,5 +1,7 @@
 use scale::Encode as _;
 
+// This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).
+
 #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
 pub struct Struct1 {
     pub a: u32,
