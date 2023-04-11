@@ -288,7 +288,7 @@ fn define_constructor(
 
     quote! {
         $(docs(constructor.docs()))
-        #[allow(dead_code)]
+        #[allow(dead_code, clippy::too_many_arguments)]
         pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
             $(conn): &C,
             $(salt): Vec<u8>,
