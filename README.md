@@ -8,7 +8,7 @@
 Install the tool from [crates.io](https://crates.io):
 
 ```bash
-cargo install --git https://github.com/Cardinal-Cryptography/ink-wrapper ink-wrapper
+cargo install ink-wrapper
 ```
 
 ## Usage
@@ -37,14 +37,16 @@ mod test_contract;
 
 You will need the following dependencies for the wrapper to work:
 
-```rust
-ink-wrapper-types = "0.1.0"
+```toml
+ink-wrapper-types = { git = "https://github.com/Cardinal-Cryptography/ink-wrapper.git", rev = "ad0076e" }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 ink_primitives = "4.0.1"
 
 # This one is optional, but you most likely need it as well if you're using the default `aleph_client` implementation
 # for actually making calls. Otherwise, you will need to implement `ink_wrapper_types::Connection` and
-# `ink_wrapper_types::SignedConnection` yourself.
+# `ink_wrapper_types::SignedConnection` yourself. Make sure you are using the same version as the one used by
+# `ink-wrapper-types` above - unfortunately this cannot be enforced automatically until `aleph-client` is published to
+# crates.io.
 
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "r-10.0" }
 ```
