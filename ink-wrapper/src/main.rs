@@ -1,15 +1,14 @@
+use std::fs;
+
 use anyhow::Result;
 use clap::Parser;
-use genco::fmt;
-use genco::prelude::*;
+use genco::{fmt, prelude::*};
 use ink_metadata::{ConstructorSpec, InkProject, MessageParamSpec, MessageSpec};
-use scale_info::TypeDefPrimitive;
 use scale_info::{
     form::PortableForm, Field, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
-    TypeDefSequence, TypeDefTuple, TypeDefVariant, Variant,
+    TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant, Variant,
 };
 use serde::{Deserialize, Serialize};
-use std::fs;
 
 #[derive(Parser)]
 struct Args {
