@@ -4206,7 +4206,6 @@ dependencies = [
  "aleph_client",
  "anyhow",
  "assert2",
- "async-trait",
  "ink-wrapper-types",
  "ink_primitives",
  "once_cell",
