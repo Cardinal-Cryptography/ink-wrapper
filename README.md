@@ -77,6 +77,15 @@ let result = instance.some_getter(&conn, arg1, arg2).await?;
 let tx_info = instance.some_mutator(&conn, arg1, arg2).await?;
 ```
 
+Note that any methods that have names like `Trait::method_name` will be grouped into traits in the generated module. You
+might encounter this if you're using openbrush, for example their `PSP22` implementation generates method names like
+`PSP22::balance_of`. You need to `use` the generated traits to access these:
+
+```rust
+use my_contract::PSP22 as _;
+instance.balance_of(&conn, account_id).await?
+```
+
 In the examples above, `conn` is anything that implements `ink_wrapper_types::Connection` (and
 `ink_wrapper_types::SignedConnection` if you want to use constructors or mutators). Default implementations are provided
 for the connection in `aleph_client`.

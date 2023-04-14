@@ -67,7 +67,7 @@ fn define_trait(
 ) -> rust::Tokens {
     quote! {
         #[async_trait::async_trait]
-        trait $(trait_name) {
+        pub trait $(trait_name) {
             $(for message in messages {
                 $(define_message_head(message, "", metadata));
             })
