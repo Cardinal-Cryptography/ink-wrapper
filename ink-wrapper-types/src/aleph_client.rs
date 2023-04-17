@@ -1,6 +1,8 @@
 use aleph_client::{
+    api::contracts::events::ContractEmitted,
     pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi},
     sp_weights::weight_v2::Weight,
+    utility::BlocksApi,
     AsConnection, Balance, CodeHash, ConnectionApi, SignedConnectionApi, TxInfo, TxStatus,
 };
 use anyhow::{anyhow, Context, Error, Result};
@@ -31,7 +33,7 @@ enum Code {
 }
 
 #[async_trait]
-impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<Error> for C {
+impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Error> for C {
     async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T> {
         let result = dry_run(&self.as_connection(), account_id, account_id, data)
             .await?
@@ -40,6 +42,27 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<Error> for C
 
         Ok(scale::Decode::decode(&mut result.data.as_slice())
             .context("Failed to decode contract call result")?)
+    }
+
+    async fn get_contract_events(&self, tx_info: TxInfo) -> Result<crate::ContractEvents> {
+        let events = self.as_connection().get_tx_events(tx_info).await?;
+        let mut result = vec![];
+
+        for event in events.iter() {
+            match event?.as_event::<ContractEmitted>()? {
+                Some(event) => {
+                    let account_id: [u8; 32] = event.contract.into();
+
+                    result.push(crate::ContractEvent {
+                        account_id: account_id.into(),
+                        data: event.data,
+                    })
+                }
+                None => (),
+            }
+        }
+
+        Ok(crate::ContractEvents { events: result })
     }
 }
 

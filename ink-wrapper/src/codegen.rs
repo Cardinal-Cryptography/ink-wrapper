@@ -27,10 +27,10 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             })
         })
 
-        mod event {
+        pub mod event {
             #[allow(dead_code)]
             #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
-            enum Event {
+            pub enum Event {
                 $(for event in metadata.spec().events() {
                     $(define_event(event, metadata))
                 })
@@ -52,6 +52,10 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             fn from(instance: Instance) -> Self {
                 instance.account_id
             }
+        }
+
+        impl ink_wrapper_types::EventSource for Instance {
+            type Event = event::Event;
         }
 
         $(for (trait_name, messages) in trait_messages {
@@ -268,7 +272,7 @@ fn define_reader_head(
     let conn = &new_name("conn", message.args());
 
     quote! {
-            $(visibility) async fn $(message.method_name())<E, C: ink_wrapper_types::Connection<E>>(
+            $(visibility) async fn $(message.method_name())<TxInfo, E, C: ink_wrapper_types::Connection<TxInfo, E>>(
                 &self,
                 $(conn): &C, $(message_args(message.args(), metadata))
             ) ->
