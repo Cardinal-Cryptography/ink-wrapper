@@ -357,7 +357,7 @@ fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust:
         $(event.label()) {
             $(for field in event.args() {
                 $(docs(field.docs()))
-                $(field.label()): $(if resolve(metadata, field.ty().ty().id()).is_custom() { super:: } else { })
+                $(field.label()): $(if resolve(metadata, field.ty().ty().id()).is_custom() { super:: })
                     $(type_ref(field.ty().ty().id(), metadata)),
             })
         },
