@@ -2,9 +2,9 @@
 
 #[ink::contract]
 mod test_contract {
+    use ink::prelude::{vec, vec::Vec};
     #[cfg(feature = "std")]
     use ink::storage::traits::StorageLayout;
-    use ink::{prelude::vec, prelude::vec::Vec};
     use scale::Compact;
 
     #[ink(storage)]
@@ -18,6 +18,20 @@ mod test_contract {
         enum2_val: Enum2,
         newtype1_val: NewType1,
     }
+
+    /// Example docs for an event.
+    /// They are multiline.
+    #[ink(event)]
+    pub struct Event1 {
+        /// Example docs for an event field.
+        /// They are multiline.
+        #[ink(topic)]
+        a: u32,
+        b: Struct2,
+    }
+
+    #[ink(event)]
+    pub struct Event2;
 
     #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
@@ -204,6 +218,15 @@ mod test_contract {
             account_id: u32,
         ) {
             self.u32_val = conn + code_hash + data + salt + account_id;
+        }
+
+        #[ink(message)]
+        pub fn generate_events(&mut self) {
+            Self::env().emit_event(Event1 {
+                a: self.u32_val,
+                b: self.struct2_val,
+            });
+            Self::env().emit_event(Event2 {});
         }
     }
 }

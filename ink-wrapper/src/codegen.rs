@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use genco::prelude::*;
-use ink_metadata::{ConstructorSpec, InkProject, MessageParamSpec, MessageSpec};
+use ink_metadata::{ConstructorSpec, EventSpec, InkProject, MessageParamSpec, MessageSpec};
 use scale_info::{
     form::PortableForm, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
     TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant,
@@ -26,6 +26,16 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
                 $(define_type(typ.ty(), metadata))
             })
         })
+
+        mod event {
+            #[allow(dead_code)]
+            #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+            enum Event {
+                $(for event in metadata.spec().events() {
+                    $(define_event(event, metadata))
+                })
+            }
+        }
 
         #[derive(Debug, Clone, Copy)]
         pub struct Instance {
@@ -330,6 +340,25 @@ fn message_args(args: &[MessageParamSpec<PortableForm>], metadata: &InkProject) 
         $(for arg in args {
             $(arg.label()): $(type_ref(arg.ty().ty().id(), metadata)),
         })
+    }
+}
+
+/// Generates an event definition as a variant in the `Event` enum.
+///
+/// Note that these definitions are hidden in a module to avoid name clashes (just in case someone uses `Event` as a
+/// type name), so references to types defined in the contract need to be prefixed with `super::`.
+fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
+    quote! {
+        $(docs(event.docs()))
+        $(event.label()) {
+            $(for field in event.args() {
+                $(docs(field.docs()))
+                $(field.label()): $(if resolve(metadata, field.ty().ty().id()).is_custom() { super:: } else { })
+                    $(type_ref(field.ty().ty().id(), metadata)),
+            })
+        },
+
+        $[ '\n' ]
     }
 }
 
