@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use ink_primitives::AccountId;
 
 #[async_trait]
-pub trait SignedConnection<TxInfo, E> {
+pub trait SignedConnection<TxInfo, E>: Sync {
     async fn instantiate(
         &self,
         code_hash: [u8; 32],
@@ -17,6 +17,6 @@ pub trait SignedConnection<TxInfo, E> {
 }
 
 #[async_trait]
-pub trait Connection<E> {
+pub trait Connection<E>: Sync {
     async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T, E>;
 }
