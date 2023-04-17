@@ -72,4 +72,8 @@ all: tooling check-ink-wrapper check-test-project test # Run all checks natively
 
 .PHONY: kill
 kill: # Remove dangling containers after a dockerized test run.
-	docker kill ink-wrapper-builder ink-wrapper-node
+	docker kill ink-wrapper-builder ink-wrapper-node || true
+
+.PHONY: clean
+clean: kill # Remove dangling containers and built images.
+	docker rmi -f ink-builder aleph-onenode-chain
