@@ -60,10 +60,13 @@ pub trait MessageSpecExtensions {
 impl MessageSpecExtensions for MessageSpec<PortableForm> {
     fn trait_name(&self) -> Option<String> {
         let parts = self.label().split("::").collect::<Vec<&str>>();
-        if parts.len() == 2 {
-            Some(parts[0].to_string())
-        } else {
-            None
+        match parts.len() {
+            1 => None,
+            2 => Some(parts[0].to_string()),
+            _ => panic!(
+                "Nested modules in method names are unsupported yet: {}",
+                self.label()
+            ),
         }
     }
 
