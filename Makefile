@@ -4,7 +4,9 @@ help: # Show help for each of the Makefile recipes.
 
 .PHONY: build-builder
 build-builder:
-	docker build --tag ink-builder --file ci/Dockerfile.builder ci
+	docker build --tag ink-builder --file ci/Dockerfile.builder \
+		--build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) \
+		ci
 
 .PHONY: build-node
 build-node:
