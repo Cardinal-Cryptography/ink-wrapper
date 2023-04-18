@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- ink-wrapper-types released to crates.io
+- `ink-wrapper-types` released to crates.io
 - Return a custom type that implements `std::error::Error` instead of `ink_primitives::LangError`
 
 ## 0.1.0
