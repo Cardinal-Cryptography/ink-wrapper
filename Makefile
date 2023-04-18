@@ -21,11 +21,17 @@ run-node: build-node # Run a one-node chain in docker.
 .PHONY: test_contract
 test_contract:
 	cd test_contract && cargo contract build --release
+
+.PHONY: upload-test-contract
+upload-test-contract: test_contract
 	cd test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
 
 .PHONY: psp22_contract
 psp22_contract:
 	cd psp22_contract && cargo contract build --release
+
+.PHONY: upload-psp22-contract
+upload-psp22-contract: psp22_contract
 	cd psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
 
 .PHONY: test_contract.rs
@@ -41,8 +47,11 @@ psp22_contract.rs: psp22_contract
 .PHONY: generate-wrappers
 generate-wrappers: test_contract.rs psp22_contract.rs # Generate wrappers for test contracts.
 
+.PHONY: upload-contracts
+upload-contracts: upload-test-contract upload-psp22-contract # Upload test contracts to the chain.
+
 .PHONY: test
-test: generate-wrappers # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
+test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
 	cd test-project && cargo test
 
 .PHONY: check-ink-wrapper
