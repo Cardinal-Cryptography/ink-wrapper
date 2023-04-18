@@ -65,6 +65,14 @@ mod test_contract {
         },
     }
 
+    /// This is a struct that is named "Event" so that we can test that the generated "Event" enum doesn't conflict
+    /// with it.
+    #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
+    pub struct Event {
+        a: u32,
+    }
+
     type NewType1 = u32;
 
     impl TestContract {
@@ -194,6 +202,11 @@ mod test_contract {
         #[ink(message)]
         pub fn set_compact(&mut self, a_compact: Compact<u32>) {
             self.u32_val = a_compact.0;
+        }
+
+        #[ink(message)]
+        pub fn fake_event(&self) -> Event {
+            Event { a: self.u32_val }
         }
 
         #[ink(message)]
