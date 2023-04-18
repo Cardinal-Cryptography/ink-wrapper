@@ -110,6 +110,10 @@ let sub_contract_events = all_events.for_contract(sub_contract);
 The `all_events` object above may contain events from multiple contracts if the contract called into them. In that case,
 you can filter and parse these events by calling `for_contract` on it, with the various contracts you're interested in.
 
+### Example
+
+Look at `test-project` in the project's repo for a fuller example.
+
 ## Development
 
 Use the commands provided in the `Makefile` to replicate the build process run on CI. The most hassle-free is to just

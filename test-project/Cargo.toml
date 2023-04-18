@@ -14,9 +14,9 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 ink_primitives = "4.0.1"
 async-trait = "0.1.68"
 
-# aleph_client version equal to the one used in ink-wrapper-types
+# aleph_client version compatible with the one used in ink-wrapper-types
 
-aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "r-10.0" }
+aleph_client = { version = "3.0.0" }
 
 # Other dependencies
 
