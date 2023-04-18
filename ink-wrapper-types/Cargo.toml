@@ -3,6 +3,13 @@ name = "ink-wrapper-types"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
+readme = "../README.md"
+description = "Helper library for contract client code generated with ink-wrapper."
+repository = "https://github.com/Cardinal-Cryptography/ink-wrapper.git"
+homepage = "https://github.com/Cardinal-Cryptography/ink-wrapper"
+documentation = "https://docs.rs/ink-wrapper-types"
+keywords = ["ink", "wasm", "blockchain", "contract", "client"]
+categories = []
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
