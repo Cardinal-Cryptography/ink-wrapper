@@ -112,12 +112,19 @@ you can filter and parse these events by calling `for_contract` on it, with the 
 
 ### Example
 
-Look at `test-project` in the project's repo for a fuller example.
+Look at `test-project` in the project's repo for a fuller example. Note that `test-project` is missing the actual
+wrappers, which are normally generated when testing. The easiest way to regenerate them is by running
+`make all-dockerized` (requires docker) - see [Development](#development) for more on that.
 
 ## Development
 
-Use the commands provided in the `Makefile` to replicate the build process run on CI. The most hassle-free is to just
-run everything in docker:
+Use the commands provided in the `Makefile` to replicate the build process run on CI:
+
+```bash
+make help
+```
+
+The most hassle-free is to just run everything in docker:
 
 ```bash
 make all-dockerized
