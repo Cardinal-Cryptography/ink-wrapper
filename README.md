@@ -13,6 +13,8 @@ cargo install ink-wrapper
 
 ## Usage
 
+### Setup
+
 Given some metadata file like `metadata.json` run the tool and save the output to a file in your project:
 
 ```bash
@@ -55,6 +57,8 @@ async-trait = "0.1.68"
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", rev = "r-10.0" }
 ```
 
+### Basic usage
+
 With that, you're ready to use the wrappers in your code. The generated module will have an `Instance` struct that
 represents an instance of your contract. You can either talk to an existing instance by converting an `account_id` to
 an `Instance`:
@@ -89,6 +93,22 @@ instance.balance_of(&conn, account_id).await?
 In the examples above, `conn` is anything that implements `ink_wrapper_types::Connection` (and
 `ink_wrapper_types::SignedConnection` if you want to use constructors or mutators). Default implementations are provided
 for the connection in `aleph_client`.
+
+### Events
+
+`ink_wrapper_types::Connection` also allows you to fetch events for a given `TxInfo`:
+
+```rust
+use ink_wrapper_types::Connection as _;
+
+let tx_info = instance.some_mutator(&conn, arg1, arg2).await?;
+let all_events = conn.get_contract_events(tx_info).await?;
+let contract_events = all_events.for_contract(instance);
+let sub_contract_events = all_events.for_contract(sub_contract);
+```
+
+The `all_events` object above may contain events from multiple contracts if the contract called into them. In that case,
+you can filter and parse these events by calling `for_contract` on it, with the various contracts you're interested in.
 
 ## Development
 

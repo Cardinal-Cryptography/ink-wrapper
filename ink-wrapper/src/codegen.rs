@@ -74,6 +74,9 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
     }
 }
 
+/// Define a group of messages with a common prefix (e.g. `PSP22::`).
+///
+/// These messages will be grouped into a trait and implemented for the contract to avoid name clashes.
 fn define_trait(
     trait_name: &str,
     messages: &[&MessageSpec<PortableForm>],
@@ -110,6 +113,9 @@ fn define_message_head(
     }
 }
 
+/// Group messages by their "trait" prefix (for example groups all messages with a `PSP22::` prefix together).
+///
+/// Returns the "main" group without any prefix as a special group (first member of the result pair).
 fn group_messages(metadata: &InkProject) -> (MessageList, HashMap<String, MessageList>) {
     let mut top_level_messages = Vec::new();
     let mut trait_messages = HashMap::new();
@@ -487,6 +493,7 @@ fn new_name(name: &str, args: &[MessageParamSpec<PortableForm>]) -> String {
     name
 }
 
+/// Parses a hex string ("0x1234...") into a byte vector.
 fn hex_to_bytes(hex: &str) -> Vec<u8> {
     hex::decode(hex.replace("0x", "")).unwrap()
 }
