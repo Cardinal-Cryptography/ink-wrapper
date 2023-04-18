@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Handle messages in openbrush-style traits (PSP22::transfer, etc.)
 
+### Changed
+
+- ink-wrapper-types released to crates.io
+
 ## 0.1.0
 
 ### Added
