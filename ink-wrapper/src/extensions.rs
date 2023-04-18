@@ -15,6 +15,9 @@ pub trait TypeExtensions {
     /// Returns true if the type is a builtin type.
     fn is_builtin(&self) -> bool;
 
+    /// Returns true if the type is defined in the contract itself.
+    fn is_custom(&self) -> bool;
+
     /// Returns the name by which the type can be referenced.
     ///
     /// It's the full path to the type for ink! types and just the name for other types. That's because any custom types
@@ -39,6 +42,10 @@ impl TypeExtensions for Type<PortableForm> {
 
     fn is_builtin(&self) -> bool {
         self.path().segments().len() == 1
+    }
+
+    fn is_custom(&self) -> bool {
+        !self.is_primitive() && !self.is_ink() && !self.is_builtin()
     }
 
     fn qualified_name(&self) -> String {

@@ -101,3 +101,23 @@ async fn test_conversion_to_account_id() -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_events() -> Result<()> {
+    use ink_wrapper_types::Connection;
+    use test_contract::event::Event;
+
+    let (conn, contract) = connect_and_deploy().await?;
+
+    let data = Struct2(Struct1 { a: 1, b: 2 }, Enum1::B(3));
+    contract.set_u32(&conn, 123).await?;
+    contract.set_struct2(&conn, data.clone()).await?;
+    let tx_info = contract.generate_events(&conn).await?;
+    let events = conn.get_contract_events(tx_info).await?;
+    let events = events.for_contract(contract);
+
+    assert!(events[0] == Ok(Event::Event1 { a: 123, b: data }));
+    assert!(events[1] == Ok(Event::Event2 {}));
+
+    Ok(())
+}

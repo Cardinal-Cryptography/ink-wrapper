@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use genco::prelude::*;
-use ink_metadata::{ConstructorSpec, InkProject, MessageParamSpec, MessageSpec};
+use ink_metadata::{
+    ConstructorSpec, EventParamSpec, EventSpec, InkProject, MessageParamSpec, MessageSpec,
+};
 use scale_info::{
     form::PortableForm, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
     TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant,
@@ -22,10 +24,20 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
         $(register(encode))
 
         $(for typ in metadata.registry().types() {
-            $(if !typ.ty().is_primitive() && !typ.ty().is_ink() && !typ.ty().is_builtin() {
+            $(if typ.ty().is_custom() {
                 $(define_type(typ.ty(), metadata))
             })
         })
+
+        pub mod event {
+            #[allow(dead_code)]
+            #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
+            pub enum Event {
+                $(for event in metadata.spec().events() {
+                    $(define_event(event, metadata))
+                })
+            }
+        }
 
         #[derive(Debug, Clone, Copy)]
         pub struct Instance {
@@ -44,6 +56,10 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             }
         }
 
+        impl ink_wrapper_types::EventSource for Instance {
+            type Event = event::Event;
+        }
+
         $(for (trait_name, messages) in trait_messages {
             $(define_trait(&trait_name, &messages, metadata))
         })
@@ -60,6 +76,9 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
     }
 }
 
+/// Define a group of messages with a common prefix (e.g. `PSP22::`).
+///
+/// These messages will be grouped into a trait and implemented for the contract to avoid name clashes.
 fn define_trait(
     trait_name: &str,
     messages: &[&MessageSpec<PortableForm>],
@@ -96,6 +115,9 @@ fn define_message_head(
     }
 }
 
+/// Group messages by their "trait" prefix (for example groups all messages with a `PSP22::` prefix together).
+///
+/// Returns the "main" group without any prefix as a special group (first member of the result pair).
 fn group_messages(metadata: &InkProject) -> (MessageList, HashMap<String, MessageList>) {
     let mut top_level_messages = Vec::new();
     let mut trait_messages = HashMap::new();
@@ -258,7 +280,7 @@ fn define_reader_head(
     let conn = &new_name("conn", message.args());
 
     quote! {
-            $(visibility) async fn $(message.method_name())<E, C: ink_wrapper_types::Connection<E>>(
+            $(visibility) async fn $(message.method_name())<TxInfo, E, C: ink_wrapper_types::Connection<TxInfo, E>>(
                 &self,
                 $(conn): &C, $(message_args(message.args(), metadata))
             ) ->
@@ -330,6 +352,36 @@ fn message_args(args: &[MessageParamSpec<PortableForm>], metadata: &InkProject) 
         $(for arg in args {
             $(arg.label()): $(type_ref(arg.ty().ty().id(), metadata)),
         })
+    }
+}
+
+/// Generates an event definition as a variant in the `Event` enum.
+///
+/// Note that these definitions are hidden in a module to avoid name clashes (just in case someone uses `Event` as a
+/// type name), so references to types defined in the contract need to be prefixed with `super::`.
+fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
+    quote! {
+        $(docs(event.docs()))
+        $(event.label()) {
+            $(for field in event.args() {
+                $(docs(field.docs()))
+                $(field.label()): $(event_field_type(field, metadata)),
+            })
+        },
+
+        $[ '\n' ]
+    }
+}
+
+/// Helper function to generate the type of an event field.
+fn event_field_type(field: &EventParamSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
+    let type_id = field.ty().ty().id();
+    let type_ref = type_ref(type_id, metadata);
+
+    if resolve(metadata, type_id).is_custom() {
+        quote! { super::$(type_ref) }
+    } else {
+        quote! { $(type_ref) }
     }
 }
 
@@ -454,6 +506,7 @@ fn new_name(name: &str, args: &[MessageParamSpec<PortableForm>]) -> String {
     name
 }
 
+/// Parses a hex string ("0x1234...") into a byte vector.
 fn hex_to_bytes(hex: &str) -> Vec<u8> {
     hex::decode(hex.replace("0x", "")).unwrap()
 }
