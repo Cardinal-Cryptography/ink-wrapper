@@ -18,6 +18,10 @@ pub trait TypeExtensions {
     /// Returns true if the type is defined in the contract itself.
     fn is_custom(&self) -> bool;
 
+    /// Returns true if the type is exactly the LangError type. We wrap this type into our own, because it's not
+    /// `Error`.
+    fn is_lang_error(&self) -> bool;
+
     /// Returns the name by which the type can be referenced.
     ///
     /// It's the full path to the type for ink! types and just the name for other types. That's because any custom types
@@ -44,12 +48,18 @@ impl TypeExtensions for Type<PortableForm> {
         self.path().segments().len() == 1
     }
 
+    fn is_lang_error(&self) -> bool {
+        self.is_ink() && self.path().segments().last().unwrap() == "LangError"
+    }
+
     fn is_custom(&self) -> bool {
         !self.is_primitive() && !self.is_ink() && !self.is_builtin()
     }
 
     fn qualified_name(&self) -> String {
-        if self.is_ink_types() {
+        if self.is_lang_error() {
+            "ink_wrapper_types::InkLangError".to_string()
+        } else if self.is_ink_types() {
             ["ink_primitives", self.path().segments().last().unwrap()].join("::")
         } else if self.is_ink() {
             self.path().segments().join("::")

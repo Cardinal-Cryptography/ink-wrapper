@@ -60,3 +60,21 @@ impl ContractEvents {
             .collect()
     }
 }
+
+/// A wrapper around `ink_primitives::LangError` that implements `std::error::Error`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
+pub struct InkLangError(ink_primitives::LangError);
+
+impl From<ink_primitives::LangError> for InkLangError {
+    fn from(e: ink_primitives::LangError) -> Self {
+        Self(e)
+    }
+}
+
+impl std::fmt::Display for InkLangError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "InkLangError({:?})", self.0)
+    }
+}
+
+impl std::error::Error for InkLangError {}

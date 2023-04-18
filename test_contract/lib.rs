@@ -241,5 +241,10 @@ mod test_contract {
             });
             Self::env().emit_event(Event2 {});
         }
+
+        #[ink(message)]
+        pub fn generate_ink_lang_error(&self) -> ink::LangError {
+            ink::LangError::CouldNotReadInput
+        }
     }
 }
