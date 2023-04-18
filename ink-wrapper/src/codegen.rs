@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use genco::prelude::*;
-use ink_metadata::{ConstructorSpec, EventSpec, InkProject, MessageParamSpec, MessageSpec};
+use ink_metadata::{
+    ConstructorSpec, EventParamSpec, EventSpec, InkProject, MessageParamSpec, MessageSpec,
+};
 use scale_info::{
     form::PortableForm, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
     TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant,
@@ -22,7 +24,7 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
         $(register(encode))
 
         $(for typ in metadata.registry().types() {
-            $(if !typ.ty().is_primitive() && !typ.ty().is_ink() && !typ.ty().is_builtin() {
+            $(if typ.ty().is_custom() {
                 $(define_type(typ.ty(), metadata))
             })
         })
@@ -363,12 +365,23 @@ fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust:
         $(event.label()) {
             $(for field in event.args() {
                 $(docs(field.docs()))
-                $(field.label()): $(if resolve(metadata, field.ty().ty().id()).is_custom() { super:: })
-                    $(type_ref(field.ty().ty().id(), metadata)),
+                $(field.label()): $(event_field_type(field, metadata)),
             })
         },
 
         $[ '\n' ]
+    }
+}
+
+/// Helper function to generate the type of an event field.
+fn event_field_type(field: &EventParamSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
+    let type_id = field.ty().ty().id();
+    let type_ref = type_ref(type_id, metadata);
+
+    if resolve(metadata, type_id).is_custom() {
+        quote! { super::$(type_ref) }
+    } else {
+        quote! { $(type_ref) }
     }
 }
 
