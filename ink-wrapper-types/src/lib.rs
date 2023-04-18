@@ -45,14 +45,18 @@ pub trait EventSource: Copy + Into<AccountId> {
 }
 
 impl ContractEvents {
-    /// Returns a events emitted by a specific contract.
-    pub fn for_contract<C: EventSource>(&self, contract: C) -> Vec<C::Event> {
+    /// Returns the events emitted by a specific contract.
+    ///
+    /// Note that this method returns a `Vec<Result<_>>`. An error indicates that a particular event could not be
+    /// decoded even though it was emitted byt the particular contract. This can happen if the metadata used to generate
+    /// the contract wrapper is out of date. If you're sure that's not the case, then it might be a bug.
+    pub fn for_contract<C: EventSource>(&self, contract: C) -> Vec<Result<C::Event, scale::Error>> {
         use scale::Decode as _;
 
         self.events
             .iter()
             .filter(|e| e.account_id == contract.into())
-            .filter_map(|e| C::Event::decode(&mut e.data.as_slice()).ok())
+            .map(|e| C::Event::decode(&mut e.data.as_slice()))
             .collect()
     }
 }

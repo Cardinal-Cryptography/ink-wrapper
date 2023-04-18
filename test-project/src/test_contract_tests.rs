@@ -116,8 +116,8 @@ async fn test_events() -> Result<()> {
     let events = conn.get_contract_events(tx_info).await?;
     let events = events.for_contract(contract);
 
-    assert!(events[0] == Event::Event1 { a: 123, b: data });
-    assert!(events[1] == Event::Event2 {});
+    assert!(events[0] == Ok(Event::Event1 { a: 123, b: data }));
+    assert!(events[1] == Ok(Event::Event2 {}));
 
     Ok(())
 }
