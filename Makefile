@@ -74,12 +74,8 @@ all-dockerized: run-node build-builder # Run all checks in a dockerized environm
 		ink-builder \
 		make all
 
-.PHONY: tooling
-tooling:
-	rustup component add rustfmt clippy
-
 .PHONY: all
-all: tooling check-ink-wrapper check-test-project test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
+all: check-ink-wrapper check-test-project test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
 
 .PHONY: kill
 kill: # Remove dangling containers after a dockerized test run.
