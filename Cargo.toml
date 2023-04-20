@@ -6,7 +6,7 @@ members = [
 ]
 
 exclude = [
-  "test_contract",
   "test-project",
-  "psp22_contract"
+  "test-project/test_contract",
+  "test-project/psp22_contract"
 ]
