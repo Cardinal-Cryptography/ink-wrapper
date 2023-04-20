@@ -20,28 +20,28 @@ run-node: build-node # Run a one-node chain in docker.
 
 .PHONY: test_contract
 test_contract:
-	cd test_contract && cargo contract build --release
+	cd test-project/test_contract && cargo contract build --release
 
 .PHONY: upload-test-contract
 upload-test-contract: test_contract
-	cd test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
+	cd test-project/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
 
 .PHONY: psp22_contract
 psp22_contract:
-	cd psp22_contract && cargo contract build --release
+	cd test-project/psp22_contract && cargo contract build --release
 
 .PHONY: upload-psp22-contract
 upload-psp22-contract: psp22_contract
-	cd psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
+	cd test-project/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
 
 .PHONY: test_contract.rs
 test_contract.rs: test_contract
-	cd ink-wrapper && cargo run -- -m ../test_contract/target/ink/test_contract.json \
+	cd ink-wrapper && cargo run -- -m ../test-project/test_contract/target/ink/test_contract.json \
 		| rustfmt --edition 2021 > ../test-project/src/test_contract.rs
 
 .PHONY: psp22_contract.rs
 psp22_contract.rs: psp22_contract
-	cd ink-wrapper && cargo run -- -m ../psp22_contract/target/ink/psp22_contract.json \
+	cd ink-wrapper && cargo run -- -m ../test-project/psp22_contract/target/ink/psp22_contract.json \
 		| rustfmt --edition 2021 > ../test-project/src/psp22_contract.rs
 
 .PHONY: generate-wrappers
