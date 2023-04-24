@@ -18,6 +18,13 @@ struct Args {
         help = "Path to the metadata file to generate a wrapper for."
     )]
     metadata: String,
+
+    #[arg(
+        long,
+        help = "Path to the WASM of the contract relative to the output file. If provided, the WASM will be embedded \
+            in the output file. Making it possible to upload the contract to a chain."
+    )]
+    wasm_path: Option<String>,
 }
 
 /// Struct for deserializing metadata.json that contains the fields not present in an InkProject.
@@ -38,7 +45,7 @@ fn main() -> Result<()> {
     let code_hash = metadata.source.hash;
     let metadata: InkProject = serde_json::from_str(&jsonized)?;
 
-    let tokens: rust::Tokens = generate(&metadata, code_hash);
+    let tokens: rust::Tokens = generate(&metadata, code_hash, args.wasm_path);
 
     let stdout = std::io::stdout();
     let mut w = fmt::IoWriter::new(stdout.lock());

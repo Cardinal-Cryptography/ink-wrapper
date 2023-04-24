@@ -14,7 +14,11 @@ use crate::extensions::*;
 type MessageList<'a> = Vec<&'a MessageSpec<PortableForm>>;
 
 /// Generates the full wrapper for the contract.
-pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
+pub fn generate(
+    metadata: &InkProject,
+    code_hash: String,
+    wasm_path: Option<String>,
+) -> rust::Tokens {
     let encode = rust::import("scale", "Encode").with_alias("_");
     let (top_level_messages, trait_messages) = group_messages(metadata);
 
@@ -64,6 +68,10 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             $(define_trait(&trait_name, &messages, metadata))
         })
 
+        $(if let Some(wasm_path) = wasm_path {
+            $(define_upload(&code_hash, &wasm_path))
+        })
+
         impl Instance {
             $(for constructor in metadata.spec().constructors().iter() {
                 $(define_constructor(&code_hash, constructor, metadata)) $['\n']
@@ -72,6 +80,20 @@ pub fn generate(metadata: &InkProject, code_hash: String) -> rust::Tokens {
             $(for message in top_level_messages {
                 $(define_message(message, "pub", metadata))
             })
+        }
+    }
+}
+
+fn define_upload(code_hash: &str, wasm_path: &str) -> rust::Tokens {
+    quote! {
+        #[allow(dead_code)]
+        pub async fn upload<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(conn: &C) ->
+            Result<TxInfo, E>
+        {
+            let wasm = include_bytes!($(quoted(wasm_path)));
+            let tx_info = conn.upload((*wasm).into(), $(format!("vec!{:?}", hex_to_bytes(code_hash)))).await?;
+
+            Ok(tx_info)
         }
     }
 }
