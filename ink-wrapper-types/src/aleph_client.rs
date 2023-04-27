@@ -15,6 +15,7 @@ use pallet_contracts_primitives::{
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
 
+/// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
 struct InstantiateRequest {
     origin: [u8; 32],
@@ -35,6 +36,7 @@ enum Code {
     Existing(CodeHash),
 }
 
+/// This matches the expected API of a code upload request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
 pub struct CodeUploadRequest {
     origin: [u8; 32],
