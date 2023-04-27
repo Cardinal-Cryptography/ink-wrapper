@@ -36,7 +36,9 @@ upload-psp22-contract: psp22_contract
 
 .PHONY: test_contract.rs
 test_contract.rs: test_contract
-	cd ink-wrapper && cargo run -- -m ../test-project/test_contract/target/ink/test_contract.json \
+	cd ink-wrapper && \
+		cargo run -- -m ../test-project/test_contract/target/ink/test_contract.json \
+			--wasm-path ../test_contract/target/ink/test_contract.wasm \
 		| rustfmt --edition 2021 > ../test-project/src/test_contract.rs
 
 .PHONY: psp22_contract.rs

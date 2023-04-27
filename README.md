@@ -15,17 +15,17 @@ cargo install ink-wrapper
 
 ### Setup
 
-Given some metadata file like `metadata.json` run the tool and save the output to a file in your project:
+Given some metadata file like `my_contract.json` run the tool and save the output to a file in your project:
 
 ```bash
-ink-wrapper -m metadata.json > src/my_contract.rs
+ink-wrapper -m my_contract.json > src/my_contract.rs
 ```
 
 We only take minimal steps to format the output of the tool, so we recommend that you run it through a formatter when
 (re)generating:
 
 ```bash
-ink-wrapper -m metadata.json | rustfmt --edition 2021 > src/my_contract.rs
+ink-wrapper -m my_contract.json | rustfmt --edition 2021 > src/my_contract.rs
 ```
 
 The output should compile with no warnings, please create an issue if any warnings pop up in your project in the
@@ -34,7 +34,7 @@ generated code.
 Make sure the file you generated is included in your module structure:
 
 ```rust
-mod test_contract;
+mod my_contract;
 ```
 
 You will need the following dependencies for the wrapper to work:
@@ -106,6 +106,25 @@ let sub_contract_events = all_events.for_contract(sub_contract);
 
 The `all_events` object above may contain events from multiple contracts if the contract called into them. In that case,
 you can filter and parse these events by calling `for_contract` on it, with the various contracts you're interested in.
+
+### Code upload
+
+If you provide a compile-time path to the compiled `WASM`:
+
+```bash
+ink-wrapper -m my_contract.json --wasm-path ../contracts/target/ink/my_contract.wasm
+```
+
+you will also be able to use the generated wrapper to upload the contract:
+
+```rust
+my_contract::upload(&conn).await
+```
+
+Note, that the generated `upload` function will return `Ok(TxInfo)` so long as the transaction was
+submitted successfully and the code hash of the metadata matches the uploaded code. If the code already existed on the
+chain, no error is returned. You can verify this condition yourself by looking at the events at the returned `TxInfo` and
+checking if they contain a `CodeStored` event.
 
 ### Example
 

@@ -7,6 +7,17 @@ use ink_primitives::AccountId;
 /// Contracts will use this trait to invoke mutating operations - constructor and mutating methods.
 #[async_trait]
 pub trait SignedConnection<TxInfo, E>: Sync {
+    /// Upload the given WASM code to the chain.
+    ///
+    /// Implementation is optional, the default calls `unimplemented!()`.
+    /// The implementor SHOULD verify that the code hash resulting from the upload is equal to the given `code_hash`.
+    async fn upload(&self, _wasm: Vec<u8>, _code_hash: Vec<u8>) -> Result<TxInfo, E> {
+        unimplemented!()
+    }
+
+    /// Instantiate a contract with the given code hash and salt.
+    ///
+    /// The constructor selector and arguments are already serialized into `data`.
     async fn instantiate(
         &self,
         code_hash: [u8; 32],
@@ -14,14 +25,21 @@ pub trait SignedConnection<TxInfo, E>: Sync {
         data: Vec<u8>,
     ) -> Result<AccountId, E>;
 
+    /// Invoke a mutating method on the `account_id` contract.
+    ///
+    /// The method selector and arguments are already serialized into `data`.
     async fn exec(&self, account_id: AccountId, data: Vec<u8>) -> Result<TxInfo, E>;
 }
 
 /// Contracts will use this trait for reading data from the chain - non-mutating methods and fetching events.
 #[async_trait]
 pub trait Connection<TxInfo, E>: Sync {
+    /// Read from a non-mutating method on the `account_id` contract.
+    ///
+    /// The method selector and arguments are already serialized into `data`.
     async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T, E>;
 
+    /// Fetch all events emitted by contracts in the transaction with the given `tx_info`.
     async fn get_contract_events(&self, tx_info: TxInfo) -> Result<ContractEvents, E>;
 }
 
