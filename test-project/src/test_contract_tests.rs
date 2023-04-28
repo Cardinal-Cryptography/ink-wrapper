@@ -110,7 +110,7 @@ async fn test_events() -> Result<()> {
 
     let (conn, contract) = connect_and_deploy().await?;
 
-    let data = Struct2(
+    let struct2 = Struct2(
         Struct1 {
             a: 1,
             b: 2,
@@ -119,7 +119,7 @@ async fn test_events() -> Result<()> {
         Enum1::B(3),
     );
     contract.set_u32(&conn, 123).await?;
-    contract.set_struct2(&conn, data.clone()).await?;
+    contract.set_struct2(&conn, struct2.clone()).await?;
     let struct1 = contract.get_struct1(&conn).await??;
     let tx_info = contract.generate_events(&conn).await?;
     let events = conn.get_contract_events(tx_info).await?;
@@ -129,8 +129,9 @@ async fn test_events() -> Result<()> {
         events[0]
             == Ok(Event::Event1 {
                 a: 123,
-                b: data,
-                c: struct1.c
+                b: struct2.clone(),
+                c: struct1.c,
+                d: (struct1, struct2)
             })
     );
     assert!(events[1] == Ok(Event::Event2 {}));

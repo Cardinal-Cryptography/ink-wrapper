@@ -28,7 +28,8 @@ mod test_contract {
         #[ink(topic)]
         a: u32,
         b: Struct2,
-        c: [u64; 4]
+        c: [u64; 4],
+        d: (Struct1, Struct2),
     }
 
     #[ink(event)]
@@ -39,7 +40,7 @@ mod test_contract {
     pub struct Struct1 {
         a: u32,
         b: u64,
-        c: [u64; 4]
+        c: [u64; 4],
     }
 
     #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
@@ -240,7 +241,8 @@ mod test_contract {
             Self::env().emit_event(Event1 {
                 a: self.u32_val,
                 b: self.struct2_val,
-                c: self.struct1_val.c
+                c: self.struct1_val.c,
+                d: (self.struct1_val, self.struct2_val),
             });
             Self::env().emit_event(Event2 {});
         }

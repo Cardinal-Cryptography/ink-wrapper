@@ -1,9 +1,7 @@
 use std::collections::HashMap;
 
 use genco::prelude::*;
-use ink_metadata::{
-    ConstructorSpec, EventParamSpec, EventSpec, InkProject, MessageParamSpec, MessageSpec,
-};
+use ink_metadata::{ConstructorSpec, EventSpec, InkProject, MessageParamSpec, MessageSpec};
 use scale_info::{
     form::PortableForm, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
     TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant,
@@ -34,7 +32,7 @@ pub fn generate(
         })
 
         pub mod event {
-            #[allow(dead_code)]
+            #[allow(dead_code, clippy::large_enum_variant)]
             #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
             pub enum Event {
                 $(for event in metadata.spec().events() {
@@ -387,7 +385,7 @@ fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust:
         $(event.label()) {
             $(for field in event.args() {
                 $(docs(field.docs()))
-                $(field.label()): $(event_field_type(field, metadata)),
+                $(field.label()): $(type_ref_prefix(field.ty().ty().id(), metadata, "super::")),
             })
         },
 
@@ -395,36 +393,32 @@ fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust:
     }
 }
 
-/// Helper function to generate the type of an event field.
-fn event_field_type(field: &EventParamSpec<PortableForm>, metadata: &InkProject) -> rust::Tokens {
-    let type_id = field.ty().ty().id();
-    let type_ref = type_ref(type_id, metadata);
-
-    if resolve(metadata, type_id).is_custom() {
-        quote! { super::$(type_ref) }
-    } else {
-        quote! { $(type_ref) }
-    }
+/// Generates a type reference to the given type (for example to use as an argument type, return type, etc.).
+fn type_ref(id: u32, metadata: &InkProject) -> String {
+    type_ref_prefix(id, metadata, "")
 }
 
 /// Generates a type reference to the given type (for example to use as an argument type, return type, etc.).
-fn type_ref(id: u32, metadata: &InkProject) -> String {
+///
+/// The `prefix` is prepended to the type name if the type is a custom type.
+fn type_ref_prefix(id: u32, metadata: &InkProject, prefix: &str) -> String {
     let typ = resolve(metadata, id);
+    let generic_prefix = if typ.is_custom() { prefix } else { "" };
 
     match typ.type_def() {
         TypeDef::Primitive(primitive) => type_ref_primitive(primitive),
-        TypeDef::Tuple(tuple) => type_ref_tuple(tuple, metadata),
-        TypeDef::Composite(_) => type_ref_generic(typ, metadata),
-        TypeDef::Variant(_) => type_ref_generic(typ, metadata),
-        TypeDef::Array(array) => type_ref_array(array, metadata),
-        TypeDef::Sequence(sequence) => type_ref_sequence(sequence, metadata),
-        TypeDef::Compact(compact) => type_ref_compact(compact, metadata),
+        TypeDef::Tuple(tuple) => type_ref_tuple(tuple, metadata, prefix),
+        TypeDef::Composite(_) => type_ref_generic(typ, metadata, generic_prefix),
+        TypeDef::Variant(_) => type_ref_generic(typ, metadata, generic_prefix),
+        TypeDef::Array(array) => type_ref_array(array, metadata, prefix),
+        TypeDef::Sequence(sequence) => type_ref_sequence(sequence, metadata, prefix),
+        TypeDef::Compact(compact) => type_ref_compact(compact, metadata, prefix),
         TypeDef::BitSequence(_) => panic!("Bit sequences are not supported yet."),
     }
 }
 
 /// Generates a type reference to a (potentially generic) type by name.
-fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject) -> String {
+fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject, prefix: &str) -> String {
     let mut generics = String::new();
     let mut first = true;
 
@@ -435,10 +429,10 @@ fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject) -> String {
             generics.push_str(", ");
         }
 
-        generics.push_str(&type_ref(param.ty().unwrap().id(), metadata));
+        generics.push_str(&type_ref_prefix(param.ty().unwrap().id(), metadata, prefix));
     }
 
-    format!("{}<{}>", typ.qualified_name(), generics)
+    format!("{}{}<{}>", prefix, typ.qualified_name(), generics)
 }
 
 /// Generates a type reference to a primitive type.
@@ -463,37 +457,56 @@ fn type_ref_primitive(primitive: &TypeDefPrimitive) -> String {
 }
 
 /// Generates a type reference to a tuple type.
-fn type_ref_tuple(tuple: &TypeDefTuple<PortableForm>, metadata: &InkProject) -> String {
+fn type_ref_tuple(
+    tuple: &TypeDefTuple<PortableForm>,
+    metadata: &InkProject,
+    prefix: &str,
+) -> String {
     format!(
         "({})",
         tuple
             .fields()
             .iter()
-            .map(|t| type_ref(t.id(), metadata))
+            .map(|t| type_ref_prefix(t.id(), metadata, prefix))
             .collect::<Vec<_>>()
             .join(", ")
     )
 }
 
 /// Generates a type reference to an array type.
-fn type_ref_array(array: &TypeDefArray<PortableForm>, metadata: &InkProject) -> String {
+fn type_ref_array(
+    array: &TypeDefArray<PortableForm>,
+    metadata: &InkProject,
+    prefix: &str,
+) -> String {
     format!(
         "[{}; {}]",
-        type_ref(array.type_param().id(), metadata),
+        type_ref_prefix(array.type_param().id(), metadata, prefix),
         array.len()
     )
 }
 
 /// Generates a type reference to a sequence type.
-fn type_ref_sequence(sequence: &TypeDefSequence<PortableForm>, metadata: &InkProject) -> String {
-    format!("Vec<{}>", type_ref(sequence.type_param().id(), metadata))
+fn type_ref_sequence(
+    sequence: &TypeDefSequence<PortableForm>,
+    metadata: &InkProject,
+    prefix: &str,
+) -> String {
+    format!(
+        "Vec<{}>",
+        type_ref_prefix(sequence.type_param().id(), metadata, prefix)
+    )
 }
 
 /// Generates a type reference to a compact type.
-fn type_ref_compact(compact: &TypeDefCompact<PortableForm>, metadata: &InkProject) -> String {
+fn type_ref_compact(
+    compact: &TypeDefCompact<PortableForm>,
+    metadata: &InkProject,
+    prefix: &str,
+) -> String {
     format!(
         "scale::Compact<{}>",
-        type_ref(compact.type_param().id(), metadata)
+        type_ref_prefix(compact.type_param().id(), metadata, prefix)
     )
 }
 
