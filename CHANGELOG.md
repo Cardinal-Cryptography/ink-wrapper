@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Arrays in events being referenced as `super::[T; N]` instaed of just `[T; N]`
+- Arrays in events being referenced as `super::[T; N]` instead of just `[T; N]`
 
 ## 0.2.0
 
