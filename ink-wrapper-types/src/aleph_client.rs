@@ -48,7 +48,7 @@ pub struct CodeUploadRequest {
 #[async_trait]
 impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Error> for C {
     async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T> {
-        let result = dry_run(&self.as_connection(), account_id, account_id, data)
+        let result = dry_run(self.as_connection(), account_id, account_id, data)
             .await?
             .result
             .map_err(|e| anyhow!("Contract exec failed {:?}", e))?;
@@ -62,16 +62,13 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
         let mut result = vec![];
 
         for event in events.iter() {
-            match event?.as_event::<ContractEmitted>()? {
-                Some(event) => {
-                    let account_id: [u8; 32] = event.contract.into();
+            if let Some(event) = event?.as_event::<ContractEmitted>()? {
+                let account_id: [u8; 32] = event.contract.into();
 
-                    result.push(crate::ContractEvent {
-                        account_id: account_id.into(),
-                        data: event.data,
-                    })
-                }
-                None => (),
+                result.push(crate::ContractEvent {
+                    account_id: account_id.into(),
+                    data: event.data,
+                })
             }
         }
 
@@ -156,12 +153,12 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         )
         .await?;
 
-        Ok(account_id.into())
+        Ok(account_id)
     }
 
     async fn exec(&self, account_id: ink_primitives::AccountId, data: Vec<u8>) -> Result<TxInfo> {
         let result = dry_run(
-            &self.as_connection(),
+            self.as_connection(),
             account_id,
             self.account_id().clone(),
             data.clone(),
@@ -191,8 +188,8 @@ async fn dry_run<A1: AsRef<[u8; 32]>, A2: AsRef<[u8; 32]>>(
     data: Vec<u8>,
 ) -> Result<ContractExecResult<Balance>> {
     let args = ContractCallArgs {
-        origin: call_as.as_ref().clone().into(),
-        dest: contract.as_ref().clone().into(),
+        origin: (*call_as.as_ref()).into(),
+        dest: (*contract.as_ref()).into(),
         value: 0,
         gas_limit: None,
         input_data: data,
