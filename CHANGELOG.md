@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for uploading contract code
 
+### Fixed
+
+- Arrays in events being referenced as `super::[T; N]` instaed of just `[T; N]`
+
 ## 0.2.0
 
 ### Added
