@@ -1,5 +1,5 @@
 use ink_metadata::MessageSpec;
-use scale_info::{form::PortableForm, Field, Type, TypeDefComposite, Variant};
+use scale_info::{form::PortableForm, Field, Type, TypeDef, TypeDefComposite, Variant};
 
 pub trait TypeExtensions {
     /// Returns true if the type is a rust primitive.
@@ -31,7 +31,10 @@ pub trait TypeExtensions {
 
 impl TypeExtensions for Type<PortableForm> {
     fn is_primitive(&self) -> bool {
-        matches!(self.type_def(), scale_info::TypeDef::Primitive(_))
+        matches!(
+            self.type_def(),
+            TypeDef::Primitive(_) | TypeDef::Sequence(_) | TypeDef::Tuple(_) | TypeDef::Array(_)
+        )
     }
 
     fn is_ink(&self) -> bool {

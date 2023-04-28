@@ -34,7 +34,14 @@ async fn test_simple_integer_messages() -> Result<()> {
 async fn test_struct_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    let val = Struct2(Struct1 { a: 1, b: 2 }, Enum1::B(3));
+    let val = Struct2(
+        Struct1 {
+            a: 1,
+            b: 2,
+            c: [2, 3, 4, 5],
+        },
+        Enum1::B(3),
+    );
     contract.set_struct2(&conn, val.clone()).await?;
     assert!(contract.get_struct2(&conn).await?? == val);
 
@@ -103,14 +110,30 @@ async fn test_events() -> Result<()> {
 
     let (conn, contract) = connect_and_deploy().await?;
 
-    let data = Struct2(Struct1 { a: 1, b: 2 }, Enum1::B(3));
+    let struct2 = Struct2(
+        Struct1 {
+            a: 1,
+            b: 2,
+            c: [0; 4],
+        },
+        Enum1::B(3),
+    );
     contract.set_u32(&conn, 123).await?;
-    contract.set_struct2(&conn, data.clone()).await?;
+    contract.set_struct2(&conn, struct2.clone()).await?;
+    let struct1 = contract.get_struct1(&conn).await??;
     let tx_info = contract.generate_events(&conn).await?;
     let events = conn.get_contract_events(tx_info).await?;
     let events = events.for_contract(contract);
 
-    assert!(events[0] == Ok(Event::Event1 { a: 123, b: data }));
+    assert!(
+        events[0]
+            == Ok(Event::Event1 {
+                a: 123,
+                b: struct2.clone(),
+                c: struct1.c,
+                d: (struct1, struct2)
+            })
+    );
     assert!(events[1] == Ok(Event::Event2 {}));
 
     Ok(())
