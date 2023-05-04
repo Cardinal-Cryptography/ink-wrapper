@@ -40,7 +40,7 @@ mod my_contract;
 You will need the following dependencies for the wrapper to work:
 
 ```toml
-ink-wrapper-types = "0.2.0"
+ink-wrapper-types = "0.3.0"
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 ink_primitives = "4.0.1"
 
