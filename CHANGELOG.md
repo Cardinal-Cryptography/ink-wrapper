@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Unhygienic use of the name `account_id` in constructors
+- Unhygienic use of the name `account_id` in constructors - could cause constructors using an argument named `account_id` to fail to compile
 
 ## 0.3.0
 
