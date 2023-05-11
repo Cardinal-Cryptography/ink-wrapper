@@ -82,9 +82,9 @@ mod test_contract {
         /// Example docs for a constructor.
         /// They are multiline.
         #[ink(constructor)]
-        pub fn new(an_u32: u32, a_bool: bool) -> Self {
+        pub fn new(an_u32: u32, a_bool: bool, account_id: u32) -> Self {
             Self {
-                u32_val: an_u32,
+                u32_val: an_u32 + account_id,
                 bool_val: a_bool,
                 ..Default::default()
             }

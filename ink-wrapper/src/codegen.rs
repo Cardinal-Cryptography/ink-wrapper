@@ -251,7 +251,7 @@ fn define_constructor(
             let $(data) = $(gather_args(constructor.selector().to_bytes(), constructor.args()));
             let $(code_hash_name) = $(format!("{:?}", hex_to_bytes(code_hash)));
             let $(account_id) = conn.instantiate($(code_hash_name), $(salt), $(data)).await?;
-            Ok(Self { account_id })
+            Ok(Self { account_id: $(account_id) })
         }
         $[ '\n' ]
     }
