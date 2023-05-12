@@ -1,6 +1,7 @@
 use aleph_client::SignedConnection;
 use anyhow::Result;
 use assert2::assert;
+use ink_wrapper_types::util::ToAccountId;
 use rand::RngCore as _;
 
 use crate::{
@@ -23,7 +24,7 @@ async fn test_transfers() -> Result<()> {
 
     let (conn, contract) = connect_and_deploy().await?;
     let other_account = random_account();
-    let other_account_id: [u8; 32] = *other_account.account_id().as_ref();
+    let other_account_id = other_account.account_id().to_account_id();
 
     contract
         .transfer(&conn, other_account_id.into(), 100, vec![])
@@ -47,7 +48,7 @@ async fn test_burn() -> Result<()> {
 
     let (conn, contract) = connect_and_deploy().await?;
     let supply_before = contract.total_supply(&conn).await?.unwrap();
-    let account_id: [u8; 32] = *conn.account_id().as_ref();
+    let account_id = conn.account_id().to_account_id();
 
     contract.burn(&conn, account_id.into(), 100).await?;
 

@@ -1,5 +1,6 @@
 #[cfg(feature = "aleph_client")]
 mod aleph_client;
+pub mod util;
 
 use async_trait::async_trait;
 use ink_primitives::AccountId;
