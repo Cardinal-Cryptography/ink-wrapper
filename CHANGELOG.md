@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Expose the contract's code hash as a constant
+
 ### Fixed
 
 - Unhygienic use of the name `account_id` in constructors - could cause constructors using an argument named `account_id` to fail to compile

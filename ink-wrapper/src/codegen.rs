@@ -25,6 +25,9 @@ pub fn generate(
 
         $(register(encode))
 
+        #[allow(dead_code)]
+        pub const CODE_HASH: [u8; 32] = $(format!("{:?}", hex_to_bytes(&code_hash)));
+
         $(for typ in metadata.registry().types() {
             $(if typ.ty().is_custom() {
                 $(define_type(typ.ty(), metadata))
@@ -40,6 +43,7 @@ pub fn generate(
                 })
             }
         }
+
 
         #[derive(Debug, Clone, Copy)]
         pub struct Instance {
@@ -67,12 +71,12 @@ pub fn generate(
         })
 
         $(if let Some(wasm_path) = wasm_path {
-            $(define_upload(&code_hash, &wasm_path))
+            $(define_upload(&wasm_path))
         })
 
         impl Instance {
             $(for constructor in metadata.spec().constructors().iter() {
-                $(define_constructor(&code_hash, constructor, metadata)) $['\n']
+                $(define_constructor(constructor, metadata)) $['\n']
             })
 
             $(for message in top_level_messages {
@@ -82,14 +86,14 @@ pub fn generate(
     }
 }
 
-fn define_upload(code_hash: &str, wasm_path: &str) -> rust::Tokens {
+fn define_upload(wasm_path: &str) -> rust::Tokens {
     quote! {
         #[allow(dead_code)]
         pub async fn upload<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(conn: &C) ->
             Result<TxInfo, E>
         {
             let wasm = include_bytes!($(quoted(wasm_path)));
-            let tx_info = conn.upload((*wasm).into(), $(format!("vec!{:?}", hex_to_bytes(code_hash)))).await?;
+            let tx_info = conn.upload((*wasm).into(), CODE_HASH.into()).await?;
 
             Ok(tx_info)
         }
@@ -230,7 +234,6 @@ fn define_composite(
 
 /// Generates a function wrapping a contract constructor.
 fn define_constructor(
-    code_hash: &str,
     constructor: &ConstructorSpec<PortableForm>,
     metadata: &InkProject,
 ) -> rust::Tokens {
@@ -238,7 +241,6 @@ fn define_constructor(
     let salt = &new_name("salt", constructor.args());
     let data = &new_name("data", constructor.args());
     let account_id = &new_name("account_id", constructor.args());
-    let code_hash_name = &new_name("code_hash", constructor.args());
 
     quote! {
         $(docs(constructor.docs()))
@@ -249,8 +251,7 @@ fn define_constructor(
             $(message_args(&constructor.args, metadata))
         ) -> Result<Self, E> {
             let $(data) = $(gather_args(constructor.selector().to_bytes(), constructor.args()));
-            let $(code_hash_name) = $(format!("{:?}", hex_to_bytes(code_hash)));
-            let $(account_id) = conn.instantiate($(code_hash_name), $(salt), $(data)).await?;
+            let $(account_id) = conn.instantiate(CODE_HASH, $(salt), $(data)).await?;
             Ok(Self { account_id: $(account_id) })
         }
         $[ '\n' ]
