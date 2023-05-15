@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Helper for converting any `AsRef[u8; 32]` to an `AccountId`
+
 ### Fixed
 
 - Unhygienic use of the name `account_id` in constructors - could cause constructors using an argument named `account_id` to fail to compile
