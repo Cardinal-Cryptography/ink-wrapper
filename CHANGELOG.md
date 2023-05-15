@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Helper for converting any `AsRef[u8; 32]` to an `AccountId`
+- Expose the contract's code hash as a constant
 
 ### Fixed
 
