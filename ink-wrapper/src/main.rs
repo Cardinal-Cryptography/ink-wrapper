@@ -11,6 +11,7 @@ use ink_metadata::InkProject;
 use serde::{Deserialize, Serialize};
 
 #[derive(Parser)]
+#[command(version, about)]
 struct Args {
     #[arg(
         short,
