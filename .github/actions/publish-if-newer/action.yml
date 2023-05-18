@@ -13,8 +13,8 @@ runs:
     - name: Publish
       shell: bash
       run: |
-        if [ $(curl https://crates.io/api/v1/crates/ink-wrapper | jq '.crate.newest_version') \
-          != $(cargo metadata | jq '.packages[] | select(.name == "ink-wrapper") | .version') ]
+        if [ $(curl https://crates.io/api/v1/crates/${{ inputs.package }} | jq '.crate.newest_version') \
+          != $(cargo metadata | jq '.packages[] | select(.name == ${{ inputs.package }}) | .version') ]
         then
           cargo publish -p ${{ inputs.package }}
         else
