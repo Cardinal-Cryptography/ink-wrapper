@@ -1,0 +1,22 @@
+---
+name: Publish if newer
+description: Publishes the package to crates.io if the version in the repo is different than the one on crates.io
+
+inputs:
+  package:
+    required: true
+    description: The name of the package to publish
+
+runs:
+  using: composite
+  steps:
+    - name: Publish
+      shell: bash
+      run: |
+        if [ $(curl https://crates.io/api/v1/crates/ink-wrapper | jq '.crate.newest_version') \
+          != $(cargo metadata | jq '.packages[] | select(.name == "ink-wrapper") | .version') ]
+        then
+          cargo publish -p ${{ inputs.package }}
+        else
+          echo "No new version of ${{ inputs.package }} to publish."
+        fi
