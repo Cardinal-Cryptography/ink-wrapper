@@ -8,7 +8,7 @@
 Install the tool from [crates.io](https://crates.io):
 
 ```bash
-cargo install ink-wrapper
+cargo install ink-wrapper --locked --force
 ```
 
 ## Usage
