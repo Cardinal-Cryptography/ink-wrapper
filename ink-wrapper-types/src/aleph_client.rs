@@ -15,6 +15,8 @@ use pallet_contracts_primitives::{
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
 
+use crate::ReadCall;
+
 /// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
 struct InstantiateRequest {
@@ -47,11 +49,16 @@ pub struct CodeUploadRequest {
 
 #[async_trait]
 impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Error> for C {
-    async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T> {
-        let result = dry_run(self.as_connection(), account_id, account_id, data)
-            .await?
-            .result
-            .map_err(|e| anyhow!("Contract exec failed {:?}", e))?;
+    async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T> {
+        let result = dry_run(
+            self.as_connection(),
+            call.account_id,
+            call.account_id,
+            call.data,
+        )
+        .await?
+        .result
+        .map_err(|e| anyhow!("Contract exec failed {:?}", e))?;
 
         Ok(scale::Decode::decode(&mut result.data.as_slice())
             .context("Failed to decode contract call result")?)

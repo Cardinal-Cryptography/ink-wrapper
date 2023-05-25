@@ -2,8 +2,32 @@
 mod aleph_client;
 pub mod util;
 
+use std::marker::PhantomData;
+
 use async_trait::async_trait;
 use ink_primitives::AccountId;
+
+/// Represents a read-only contract call to be made.
+#[derive(Debug, Clone)]
+pub struct ReadCall<T: scale::Decode + Send> {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
+}
+
+impl<T: scale::Decode + Send> ReadCall<T> {
+    /// Create a new read call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self {
+            account_id,
+            data,
+            _return_type: Default::default(),
+        }
+    }
+}
 
 /// Contracts will use this trait to invoke mutating operations - constructor and mutating methods.
 #[async_trait]
@@ -38,7 +62,7 @@ pub trait Connection<TxInfo, E>: Sync {
     /// Read from a non-mutating method on the `account_id` contract.
     ///
     /// The method selector and arguments are already serialized into `data`.
-    async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T, E>;
+    async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T, E>;
 
     /// Fetch all events emitted by contracts in the transaction with the given `tx_info`.
     async fn get_contract_events(&self, tx_info: TxInfo) -> Result<ContractEvents, E>;

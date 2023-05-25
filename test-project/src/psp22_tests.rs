@@ -1,7 +1,7 @@
 use aleph_client::SignedConnection;
 use anyhow::Result;
 use assert2::assert;
-use ink_wrapper_types::util::ToAccountId;
+use ink_wrapper_types::{util::ToAccountId, Connection as _};
 use rand::RngCore as _;
 
 use crate::{
@@ -31,8 +31,7 @@ async fn test_transfers() -> Result<()> {
         .await?;
 
     assert!(
-        contract
-            .balance_of(&conn, other_account_id.into())
+        conn.read(contract.balance_of(other_account_id.into()))
             .await?
             .unwrap()
             == 100
@@ -47,12 +46,12 @@ async fn test_burn() -> Result<()> {
     use psp22_contract::{PSP22Burnable as _, PSP22 as _};
 
     let (conn, contract) = connect_and_deploy().await?;
-    let supply_before = contract.total_supply(&conn).await?.unwrap();
+    let supply_before = conn.read(contract.total_supply()).await?.unwrap();
     let account_id = conn.account_id().to_account_id();
 
     contract.burn(&conn, account_id.into(), 100).await?;
 
-    assert!(contract.total_supply(&conn).await?.unwrap() == supply_before - 100);
+    assert!(conn.read(contract.total_supply()).await?.unwrap() == supply_before - 100);
 
     Ok(())
 }

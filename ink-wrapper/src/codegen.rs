@@ -277,7 +277,6 @@ fn define_reader(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
     let data = &new_name("data", message.args());
 
     quote! {
@@ -286,7 +285,7 @@ fn define_reader(
         $(define_reader_head(message, visibility, metadata))
         {
             let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
-            $(conn).read(self.account_id, $(data)).await
+            ink_wrapper_types::ReadCall::new(self.account_id, $(data))
         }
 
         $[ '\n' ]
@@ -298,14 +297,9 @@ fn define_reader_head(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
-
     quote! {
-            $(visibility) async fn $(message.method_name())<TxInfo, E, C: ink_wrapper_types::Connection<TxInfo, E>>(
-                &self,
-                $(conn): &C, $(message_args(message.args(), metadata))
-            ) ->
-                Result<$(type_ref(message.return_type().opt_type().unwrap().ty().id(), metadata)), E>
+        $(visibility) fn $(message.method_name())(&self, $(message_args(message.args(), metadata))) ->
+            ink_wrapper_types::ReadCall<$(type_ref(message.return_type().opt_type().unwrap().ty().id(), metadata))>
     }
 }
 
