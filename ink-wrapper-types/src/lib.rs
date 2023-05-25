@@ -47,6 +47,13 @@ pub struct ExecCall {
     pub data: Vec<u8>,
 }
 
+impl ExecCall {
+    /// Create a new exec call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self { account_id, data }
+    }
+}
+
 /// Represents a read-only contract call to be made.
 #[derive(Debug, Clone)]
 pub struct ReadCall<T: scale::Decode + Send> {
@@ -91,7 +98,7 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     /// Invoke a mutating method on the `account_id` contract.
     ///
     /// The method selector and arguments are already serialized into `data`.
-    async fn exec(&self, account_id: AccountId, data: Vec<u8>) -> Result<TxInfo, E>;
+    async fn exec(&self, call: ExecCall) -> Result<TxInfo, E>;
 }
 
 /// Contracts will use this trait for reading data from the chain - non-mutating methods and fetching events.

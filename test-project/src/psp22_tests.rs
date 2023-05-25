@@ -28,8 +28,7 @@ async fn test_transfers() -> Result<()> {
     let other_account = random_account();
     let other_account_id = other_account.account_id().to_account_id();
 
-    contract
-        .transfer(&conn, other_account_id.into(), 100, vec![])
+    conn.exec(contract.transfer(other_account_id.into(), 100, vec![]))
         .await?;
 
     assert!(
@@ -51,7 +50,7 @@ async fn test_burn() -> Result<()> {
     let supply_before = conn.read(contract.total_supply()).await?.unwrap();
     let account_id = conn.account_id().to_account_id();
 
-    contract.burn(&conn, account_id.into(), 100).await?;
+    conn.exec(contract.burn(account_id.into(), 100)).await?;
 
     assert!(conn.read(contract.total_supply()).await?.unwrap() == supply_before - 100);
 

@@ -15,7 +15,7 @@ use pallet_contracts_primitives::{
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
 
-use crate::{InstantiateCall, ReadCall};
+use crate::{ExecCall, InstantiateCall, ReadCall};
 
 /// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
@@ -158,15 +158,15 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         Ok(account_id.into())
     }
 
-    async fn exec(&self, account_id: ink_primitives::AccountId, data: Vec<u8>) -> Result<TxInfo> {
+    async fn exec(&self, call: ExecCall) -> Result<TxInfo> {
         let result = dry_run(
             self.as_connection(),
-            account_id,
+            call.account_id,
             self.account_id().clone(),
-            data.clone(),
+            call.data.clone(),
         )
         .await?;
-        let account_id: [u8; 32] = *account_id.as_ref();
+        let account_id: [u8; 32] = *call.account_id.as_ref();
 
         self.call(
             account_id.into(),
@@ -176,7 +176,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
                 proof_size: result.gas_required.proof_size(),
             },
             None,
-            data,
+            call.data,
             TxStatus::Finalized,
         )
         .await

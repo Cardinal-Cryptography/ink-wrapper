@@ -303,7 +303,6 @@ fn define_mutator(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
     let data = &new_name("data", message.args());
 
     quote! {
@@ -312,7 +311,7 @@ fn define_mutator(
         $(define_mutator_head(message, visibility, metadata))
         {
             let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
-            $(conn).exec(self.account_id, $(data)).await
+            ink_wrapper_types::ExecCall::new(self.account_id, $(data))
         }
 
         $[ '\n' ]
@@ -324,13 +323,9 @@ fn define_mutator_head(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
-
     quote! {
-        $(visibility) async fn $(message.method_name())<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
-            &self, $(conn): &C,
-            $(message_args(message.args(), metadata))
-        ) -> Result<TxInfo, E>
+        $(visibility) fn $(message.method_name())(&self, $(message_args(message.args(), metadata))) ->
+            ink_wrapper_types::ExecCall
     }
 }
 

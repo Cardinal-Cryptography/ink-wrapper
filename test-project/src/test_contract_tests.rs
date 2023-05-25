@@ -25,7 +25,7 @@ async fn test_simple_integer_messages() -> Result<()> {
 
     let old_val = conn.read(contract.get_u32()).await??;
     let new_val = old_val + 42;
-    contract.set_u32(&conn, new_val).await?;
+    conn.exec(contract.set_u32(new_val)).await?;
 
     assert!(conn.read(contract.get_u32()).await?? == new_val);
 
@@ -44,7 +44,7 @@ async fn test_struct_messages() -> Result<()> {
         },
         Enum1::B(3),
     );
-    contract.set_struct2(&conn, val.clone()).await?;
+    conn.exec(contract.set_struct2(val.clone())).await?;
     assert!(conn.read(contract.get_struct2()).await?? == val);
 
     Ok(())
@@ -54,8 +54,8 @@ async fn test_struct_messages() -> Result<()> {
 async fn test_array_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    contract.set_array(&conn, [1, 2, 3]).await?;
-    contract.set_enum1(&conn, Enum1::A()).await?;
+    conn.exec(contract.set_array([1, 2, 3])).await?;
+    conn.exec(contract.set_enum1(Enum1::A())).await?;
     assert!(conn.read(contract.get_array()).await?? == [(1, Enum1::A()), (1, Enum1::A())]);
 
     Ok(())
@@ -65,8 +65,8 @@ async fn test_array_messages() -> Result<()> {
 async fn test_sequence_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    contract.set_sequence(&conn, vec![5, 2, 3]).await?;
-    contract.set_enum1(&conn, Enum1::A()).await?;
+    conn.exec(contract.set_sequence(vec![5, 2, 3])).await?;
+    conn.exec(contract.set_enum1(Enum1::A())).await?;
     assert!(conn.read(contract.get_array()).await?? == [(5, Enum1::A()), (5, Enum1::A())]);
 
     Ok(())
@@ -76,7 +76,7 @@ async fn test_sequence_messages() -> Result<()> {
 async fn test_compact_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    contract.set_compact(&conn, scale::Compact(42)).await?;
+    conn.exec(contract.set_compact(scale::Compact(42))).await?;
     assert!(conn.read(contract.get_compact()).await?? == scale::Compact(42));
 
     Ok(())
@@ -86,7 +86,8 @@ async fn test_compact_messages() -> Result<()> {
 async fn test_messages_with_clashing_argument_names() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    contract.set_forbidden_names(&conn, 1, 2, 3, 4, 5).await?;
+    conn.exec(contract.set_forbidden_names(1, 2, 3, 4, 5))
+        .await?;
     assert!(conn.read(contract.get_u32()).await?? == 1 + 2 + 3 + 4 + 5);
     assert!(
         conn.read(contract.get_forbidden_names(1, 2, 3, 4, 5))
@@ -100,7 +101,7 @@ async fn test_messages_with_clashing_argument_names() -> Result<()> {
 #[tokio::test]
 async fn test_conversion_to_account_id() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
-    contract.set_u32(&conn, 12345).await?;
+    conn.exec(contract.set_u32(12345)).await?;
 
     let account_id: AccountId = contract.into();
     let contract: test_contract::Instance = account_id.into();
@@ -124,10 +125,10 @@ async fn test_events() -> Result<()> {
         },
         Enum1::B(3),
     );
-    contract.set_u32(&conn, 123).await?;
-    contract.set_struct2(&conn, struct2.clone()).await?;
+    conn.exec(contract.set_u32(123)).await?;
+    conn.exec(contract.set_struct2(struct2.clone())).await?;
     let struct1 = conn.read(contract.get_struct1()).await??;
-    let tx_info = contract.generate_events(&conn).await?;
+    let tx_info = conn.exec(contract.generate_events()).await?;
     let events = conn.get_contract_events(tx_info).await?;
     let events = events.for_contract(contract);
 
