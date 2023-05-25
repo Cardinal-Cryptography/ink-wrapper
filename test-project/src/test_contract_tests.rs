@@ -164,7 +164,7 @@ async fn test_ink_lang_error() -> Result<()> {
 async fn test_upload() -> Result<()> {
     let conn = connect_as_test_account().await?;
 
-    assert!(test_contract::upload(&conn).await.is_ok());
+    assert!(conn.upload(test_contract::upload()).await.is_ok());
 
     Ok(())
 }

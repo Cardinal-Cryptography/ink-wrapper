@@ -89,13 +89,10 @@ pub fn generate(
 fn define_upload(wasm_path: &str) -> rust::Tokens {
     quote! {
         #[allow(dead_code)]
-        pub async fn upload<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(conn: &C) ->
-            Result<TxInfo, E>
+        pub fn upload() -> ink_wrapper_types::UploadCall
         {
             let wasm = include_bytes!($(quoted(wasm_path)));
-            let tx_info = conn.upload((*wasm).into(), CODE_HASH.into()).await?;
-
-            Ok(tx_info)
+            ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH.into())
         }
     }
 }

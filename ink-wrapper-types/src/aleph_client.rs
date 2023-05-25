@@ -15,7 +15,7 @@ use pallet_contracts_primitives::{
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
 
-use crate::{ExecCall, InstantiateCall, ReadCall};
+use crate::{ExecCall, InstantiateCall, ReadCall, UploadCall};
 
 /// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
@@ -85,13 +85,13 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 
 #[async_trait]
 impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
-    async fn upload(&self, wasm: Vec<u8>, code_hash: Vec<u8>) -> Result<TxInfo> {
+    async fn upload(&self, call: UploadCall) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
         let determinism = Determinism::Deterministic;
 
         let args = CodeUploadRequest {
             origin,
-            code: wasm.clone(),
+            code: call.wasm.clone(),
             storage_deposit_limit: None,
             determinism,
         };
@@ -103,16 +103,21 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             .map_err(|e| anyhow!("Code upload failed {:?}", e))?
             .code_hash;
 
-        if actual_code_hash.as_ref() != code_hash {
+        if actual_code_hash.as_ref() != call.expected_code_hash {
             return Err(anyhow!(
                 "Code hash mismatch: expected {:?}, got {:?}",
-                code_hash,
+                call.expected_code_hash,
                 actual_code_hash
             ));
         }
 
         let tx_info = self
-            .upload_code(wasm, None, Determinism::Deterministic, TxStatus::Finalized)
+            .upload_code(
+                call.wasm,
+                None,
+                Determinism::Deterministic,
+                TxStatus::Finalized,
+            )
             .await?;
 
         Ok(tx_info)

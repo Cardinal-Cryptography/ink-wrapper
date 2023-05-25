@@ -76,6 +76,24 @@ impl<T: scale::Decode + Send> ReadCall<T> {
     }
 }
 
+/// Represents a call to upload a contract.
+pub struct UploadCall {
+    /// The WASM code to upload.
+    pub wasm: Vec<u8>,
+    /// The expected code hash of the uploaded code.
+    pub expected_code_hash: Vec<u8>,
+}
+
+impl UploadCall {
+    /// Create a new upload call.
+    pub fn new(wasm: Vec<u8>, expected_code_hash: Vec<u8>) -> Self {
+        Self {
+            wasm,
+            expected_code_hash,
+        }
+    }
+}
+
 /// Contracts will use this trait to invoke mutating operations - constructor and mutating methods.
 #[async_trait]
 pub trait SignedConnection<TxInfo, E>: Sync {
@@ -83,7 +101,7 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     ///
     /// Implementation is optional, the default calls `unimplemented!()`.
     /// The implementor SHOULD verify that the code hash resulting from the upload is equal to the given `code_hash`.
-    async fn upload(&self, _wasm: Vec<u8>, _code_hash: Vec<u8>) -> Result<TxInfo, E> {
+    async fn upload(&self, _call: UploadCall) -> Result<TxInfo, E> {
         unimplemented!()
     }
 
