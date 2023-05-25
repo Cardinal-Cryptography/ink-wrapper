@@ -237,22 +237,16 @@ fn define_constructor(
     constructor: &ConstructorSpec<PortableForm>,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", constructor.args());
-    let salt = &new_name("salt", constructor.args());
     let data = &new_name("data", constructor.args());
-    let account_id = &new_name("account_id", constructor.args());
 
     quote! {
         $(docs(constructor.docs()))
         #[allow(dead_code, clippy::too_many_arguments)]
-        pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
-            $(conn): &C,
-            $(salt): Vec<u8>,
-            $(message_args(&constructor.args, metadata))
-        ) -> Result<Self, E> {
+        pub fn $(&constructor.label)($(message_args(&constructor.args, metadata))) ->
+            ink_wrapper_types::InstantiateCall<Self>
+        {
             let $(data) = $(gather_args(constructor.selector().to_bytes(), constructor.args()));
-            let $(account_id) = conn.instantiate(CODE_HASH, $(salt), $(data)).await?;
-            Ok(Self { account_id: $(account_id) })
+            ink_wrapper_types::InstantiateCall::new(CODE_HASH, $(data))
         }
         $[ '\n' ]
     }

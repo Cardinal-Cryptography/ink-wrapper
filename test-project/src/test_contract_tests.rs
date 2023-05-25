@@ -2,7 +2,7 @@ use aleph_client::SignedConnection;
 use anyhow::Result;
 use assert2::assert;
 use ink_primitives::AccountId;
-use ink_wrapper_types::Connection as _;
+use ink_wrapper_types::{Connection as _, SignedConnection as _};
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
 
@@ -12,7 +12,9 @@ async fn connect_and_deploy() -> Result<(SignedConnection, test_contract::Instan
     let conn = connect_as_test_account().await?;
     let mut salt = vec![0; 32];
     rand::thread_rng().fill_bytes(&mut salt);
-    let contract = test_contract::Instance::default(&conn, salt).await?;
+    let contract = conn
+        .instantiate(test_contract::Instance::default().with_salt(salt))
+        .await?;
 
     Ok((conn, contract))
 }

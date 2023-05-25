@@ -15,7 +15,7 @@ use pallet_contracts_primitives::{
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
 
-use crate::ReadCall;
+use crate::{InstantiateCall, ReadCall};
 
 /// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
@@ -118,12 +118,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         Ok(tx_info)
     }
 
-    async fn instantiate(
-        &self,
-        code_hash: [u8; 32],
-        salt: Vec<u8>,
-        data: Vec<u8>,
-    ) -> Result<AccountId> {
+    async fn instantiate<T: Send + From<AccountId>>(&self, call: InstantiateCall<T>) -> Result<T> {
         let origin = self.account_id().clone().into();
         let value = 0;
 
@@ -132,9 +127,9 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             value,
             gas_limit: None,
             storage_deposit_limit: None,
-            code: Code::Existing(code_hash.into()),
-            data: data.clone(),
-            salt: salt.clone(),
+            code: Code::Existing(call.code_hash.into()),
+            data: call.data.clone(),
+            salt: call.salt.clone(),
         };
 
         let params = rpc_params!["ContractsApi_instantiate", Bytes(args.encode())];
@@ -147,20 +142,20 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 
         ContractsUserApi::instantiate(
             self,
-            code_hash.into(),
+            call.code_hash.into(),
             value,
             Weight {
                 ref_time: dry_run_results.gas_required.ref_time(),
                 proof_size: dry_run_results.gas_required.proof_size(),
             },
             None,
-            data,
-            salt,
+            call.data,
+            call.salt,
             TxStatus::Finalized,
         )
         .await?;
 
-        Ok(account_id)
+        Ok(account_id.into())
     }
 
     async fn exec(&self, account_id: ink_primitives::AccountId, data: Vec<u8>) -> Result<TxInfo> {

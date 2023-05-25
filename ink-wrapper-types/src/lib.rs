@@ -7,6 +7,46 @@ use std::marker::PhantomData;
 use async_trait::async_trait;
 use ink_primitives::AccountId;
 
+/// Represents a call to a contract constructor.
+#[derive(Debug, Clone)]
+pub struct InstantiateCall<T: Send> {
+    /// The code hash of the contract to instantiate.
+    pub code_hash: [u8; 32],
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// The salt to use for the contract.
+    pub salt: Vec<u8>,
+    /// A marker for the type of contract to instantiate.
+    _contract: PhantomData<T>,
+}
+
+impl<T: Send> InstantiateCall<T> {
+    /// Create a new instantiate call.
+    pub fn new(code_hash: [u8; 32], data: Vec<u8>) -> Self {
+        Self {
+            code_hash,
+            data,
+            salt: vec![],
+            _contract: Default::default(),
+        }
+    }
+
+    /// Set the salt to use for the instantiation.
+    pub fn with_salt(mut self, salt: Vec<u8>) -> Self {
+        self.salt = salt;
+        self
+    }
+}
+
+/// Represents a mutating contract call to be made.
+#[derive(Debug, Clone)]
+pub struct ExecCall {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+}
+
 /// Represents a read-only contract call to be made.
 #[derive(Debug, Clone)]
 pub struct ReadCall<T: scale::Decode + Send> {
@@ -43,12 +83,10 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     /// Instantiate a contract with the given code hash and salt.
     ///
     /// The constructor selector and arguments are already serialized into `data`.
-    async fn instantiate(
+    async fn instantiate<T: Send + From<AccountId>>(
         &self,
-        code_hash: [u8; 32],
-        salt: Vec<u8>,
-        data: Vec<u8>,
-    ) -> Result<AccountId, E>;
+        call: InstantiateCall<T>,
+    ) -> Result<T, E>;
 
     /// Invoke a mutating method on the `account_id` contract.
     ///

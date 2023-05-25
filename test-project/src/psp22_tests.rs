@@ -1,7 +1,7 @@
 use aleph_client::SignedConnection;
 use anyhow::Result;
 use assert2::assert;
-use ink_wrapper_types::{util::ToAccountId, Connection as _};
+use ink_wrapper_types::{util::ToAccountId, Connection as _, SignedConnection as _};
 use rand::RngCore as _;
 
 use crate::{
@@ -13,7 +13,9 @@ async fn connect_and_deploy() -> Result<(SignedConnection, psp22_contract::Insta
     let conn = connect_as_test_account().await?;
     let mut salt = vec![0; 32];
     rand::thread_rng().fill_bytes(&mut salt);
-    let contract = psp22_contract::Instance::new(&conn, salt, 1000).await?;
+    let contract = conn
+        .instantiate(psp22_contract::Instance::new(1000).with_salt(salt))
+        .await?;
 
     Ok((conn, contract))
 }
