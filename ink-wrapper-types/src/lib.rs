@@ -94,9 +94,9 @@ impl UploadCall {
     }
 }
 
-/// Contracts will use this trait to invoke mutating operations - constructor and mutating methods.
+/// A connection with the ability to upload WASM code to the chain.
 #[async_trait]
-pub trait SignedConnection<TxInfo, E>: Sync {
+pub trait UploadConnection<TxInfo, E>: Sync {
     /// Upload the given WASM code to the chain.
     ///
     /// Implementation is optional, the default calls `unimplemented!()`.
@@ -104,27 +104,25 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     async fn upload(&self, _call: UploadCall) -> Result<TxInfo, E> {
         unimplemented!()
     }
+}
 
-    /// Instantiate a contract with the given code hash and salt.
-    ///
-    /// The constructor selector and arguments are already serialized into `data`.
+/// A connection with the ability to invoke mutating operations - constructor and mutating methods.
+#[async_trait]
+pub trait SignedConnection<TxInfo, E>: Sync {
+    /// Instantiate a contract according to the given `call`.
     async fn instantiate<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
     ) -> Result<T, E>;
 
-    /// Invoke a mutating method on the `account_id` contract.
-    ///
-    /// The method selector and arguments are already serialized into `data`.
+    /// Perform the given mutating call.
     async fn exec(&self, call: ExecCall) -> Result<TxInfo, E>;
 }
 
-/// Contracts will use this trait for reading data from the chain - non-mutating methods and fetching events.
+/// A read-only connection - can invoke non-mutating methods and fetch events.
 #[async_trait]
 pub trait Connection<TxInfo, E>: Sync {
-    /// Read from a non-mutating method on the `account_id` contract.
-    ///
-    /// The method selector and arguments are already serialized into `data`.
+    /// Perform the given read-only call.
     async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T, E>;
 
     /// Fetch all events emitted by contracts in the transaction with the given `tx_info`.

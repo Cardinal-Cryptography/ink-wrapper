@@ -2,7 +2,7 @@ use aleph_client::SignedConnection;
 use anyhow::Result;
 use assert2::assert;
 use ink_primitives::AccountId;
-use ink_wrapper_types::{Connection as _, SignedConnection as _};
+use ink_wrapper_types::{Connection as _, SignedConnection as _, UploadConnection as _};
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
 

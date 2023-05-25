@@ -84,7 +84,7 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 }
 
 #[async_trait]
-impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
+impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
     async fn upload(&self, call: UploadCall) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
         let determinism = Determinism::Deterministic;
@@ -122,7 +122,10 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 
         Ok(tx_info)
     }
+}
 
+#[async_trait]
+impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
     async fn instantiate<T: Send + From<AccountId>>(&self, call: InstantiateCall<T>) -> Result<T> {
         let origin = self.account_id().clone().into();
         let value = 0;
