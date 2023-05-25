@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Invalid version of an indirect dependency causing mangled output when installed without `--locked`
 
+### Changed
+
+- Contracts are now called with `conn.exec(contract.some_method(args))`, etc.
+
 ## 0.4.1
 
 ### Fixed
