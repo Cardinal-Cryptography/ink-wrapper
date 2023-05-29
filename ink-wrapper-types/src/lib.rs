@@ -81,12 +81,12 @@ pub struct UploadCall {
     /// The WASM code to upload.
     pub wasm: Vec<u8>,
     /// The expected code hash of the uploaded code.
-    pub expected_code_hash: Vec<u8>,
+    pub expected_code_hash: [u8; 32],
 }
 
 impl UploadCall {
     /// Create a new upload call.
-    pub fn new(wasm: Vec<u8>, expected_code_hash: Vec<u8>) -> Self {
+    pub fn new(wasm: Vec<u8>, expected_code_hash: [u8; 32]) -> Self {
         Self {
             wasm,
             expected_code_hash,

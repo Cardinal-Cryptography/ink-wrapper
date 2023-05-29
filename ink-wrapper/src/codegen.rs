@@ -92,7 +92,7 @@ fn define_upload(wasm_path: &str) -> rust::Tokens {
         pub fn upload() -> ink_wrapper_types::UploadCall
         {
             let wasm = include_bytes!($(quoted(wasm_path)));
-            ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH.into())
+            ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH)
         }
     }
 }

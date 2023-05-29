@@ -2,6 +2,7 @@ use aleph_client::{
     api::contracts::events::ContractEmitted,
     pallet_contracts::wasm::Determinism,
     pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi},
+    sp_core::H256,
     sp_weights::weight_v2::Weight,
     utility::BlocksApi,
     AsConnection, Balance, CodeHash, ConnectionApi, SignedConnectionApi, TxInfo, TxStatus,
@@ -103,10 +104,11 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             .map_err(|e| anyhow!("Code upload failed {:?}", e))?
             .code_hash;
 
-        if actual_code_hash.as_ref() != call.expected_code_hash {
+        let expected_code_hash = H256(call.expected_code_hash);
+        if actual_code_hash != expected_code_hash {
             return Err(anyhow!(
                 "Code hash mismatch: expected {:?}, got {:?}",
-                call.expected_code_hash,
+                expected_code_hash,
                 actual_code_hash
             ));
         }
