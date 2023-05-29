@@ -98,7 +98,7 @@ for the connection in `aleph_client`.
 ```rust
 use ink_wrapper_types::Connection as _;
 
-let tx_info = conn(instance.some_mutator(arg1, arg2)).await?;
+let tx_info = conn.exec(instance.some_mutator(arg1, arg2)).await?;
 let all_events = conn.get_contract_events(tx_info).await?;
 let contract_events = all_events.for_contract(instance);
 let sub_contract_events = all_events.for_contract(sub_contract);
