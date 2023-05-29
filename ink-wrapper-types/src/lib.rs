@@ -2,43 +2,128 @@
 mod aleph_client;
 pub mod util;
 
+use std::marker::PhantomData;
+
 use async_trait::async_trait;
 use ink_primitives::AccountId;
 
-/// Contracts will use this trait to invoke mutating operations - constructor and mutating methods.
+/// Represents a call to a contract constructor.
+#[derive(Debug, Clone)]
+pub struct InstantiateCall<T: Send> {
+    /// The code hash of the contract to instantiate.
+    pub code_hash: [u8; 32],
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// The salt to use for the contract.
+    pub salt: Vec<u8>,
+    /// A marker for the type of contract to instantiate.
+    _contract: PhantomData<T>,
+}
+
+impl<T: Send> InstantiateCall<T> {
+    /// Create a new instantiate call.
+    pub fn new(code_hash: [u8; 32], data: Vec<u8>) -> Self {
+        Self {
+            code_hash,
+            data,
+            salt: vec![],
+            _contract: Default::default(),
+        }
+    }
+
+    /// Set the salt to use for the instantiation.
+    pub fn with_salt(mut self, salt: Vec<u8>) -> Self {
+        self.salt = salt;
+        self
+    }
+}
+
+/// Represents a mutating contract call to be made.
+#[derive(Debug, Clone)]
+pub struct ExecCall {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+}
+
+impl ExecCall {
+    /// Create a new exec call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self { account_id, data }
+    }
+}
+
+/// Represents a read-only contract call to be made.
+#[derive(Debug, Clone)]
+pub struct ReadCall<T: scale::Decode + Send> {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
+}
+
+impl<T: scale::Decode + Send> ReadCall<T> {
+    /// Create a new read call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self {
+            account_id,
+            data,
+            _return_type: Default::default(),
+        }
+    }
+}
+
+/// Represents a call to upload a contract.
+pub struct UploadCall {
+    /// The WASM code to upload.
+    pub wasm: Vec<u8>,
+    /// The expected code hash of the uploaded code.
+    pub expected_code_hash: [u8; 32],
+}
+
+impl UploadCall {
+    /// Create a new upload call.
+    pub fn new(wasm: Vec<u8>, expected_code_hash: [u8; 32]) -> Self {
+        Self {
+            wasm,
+            expected_code_hash,
+        }
+    }
+}
+
+/// A connection with the ability to upload WASM code to the chain.
 #[async_trait]
-pub trait SignedConnection<TxInfo, E>: Sync {
+pub trait UploadConnection<TxInfo, E>: Sync {
     /// Upload the given WASM code to the chain.
     ///
     /// Implementation is optional, the default calls `unimplemented!()`.
     /// The implementor SHOULD verify that the code hash resulting from the upload is equal to the given `code_hash`.
-    async fn upload(&self, _wasm: Vec<u8>, _code_hash: Vec<u8>) -> Result<TxInfo, E> {
+    async fn upload(&self, _call: UploadCall) -> Result<TxInfo, E> {
         unimplemented!()
     }
-
-    /// Instantiate a contract with the given code hash and salt.
-    ///
-    /// The constructor selector and arguments are already serialized into `data`.
-    async fn instantiate(
-        &self,
-        code_hash: [u8; 32],
-        salt: Vec<u8>,
-        data: Vec<u8>,
-    ) -> Result<AccountId, E>;
-
-    /// Invoke a mutating method on the `account_id` contract.
-    ///
-    /// The method selector and arguments are already serialized into `data`.
-    async fn exec(&self, account_id: AccountId, data: Vec<u8>) -> Result<TxInfo, E>;
 }
 
-/// Contracts will use this trait for reading data from the chain - non-mutating methods and fetching events.
+/// A connection with the ability to invoke mutating operations - constructor and mutating methods.
+#[async_trait]
+pub trait SignedConnection<TxInfo, E>: Sync {
+    /// Instantiate a contract according to the given `call`.
+    async fn instantiate<T: Send + From<AccountId>>(
+        &self,
+        call: InstantiateCall<T>,
+    ) -> Result<T, E>;
+
+    /// Perform the given mutating call.
+    async fn exec(&self, call: ExecCall) -> Result<TxInfo, E>;
+}
+
+/// A read-only connection - can invoke non-mutating methods and fetch events.
 #[async_trait]
 pub trait Connection<TxInfo, E>: Sync {
-    /// Read from a non-mutating method on the `account_id` contract.
-    ///
-    /// The method selector and arguments are already serialized into `data`.
-    async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T, E>;
+    /// Perform the given read-only call.
+    async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T, E>;
 
     /// Fetch all events emitted by contracts in the transaction with the given `tx_info`.
     async fn get_contract_events(&self, tx_info: TxInfo) -> Result<ContractEvents, E>;

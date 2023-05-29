@@ -68,14 +68,14 @@ let instance: my_contract::Instance = account_id.into();
 Or (assuming the contract code has already been uploaded) create an instance using one of the generated constructors:
 
 ```rust
-let instance = my_contract::Instance::some_constructor(&conn, arg1, arg2).await?;
+let instance = conn.instantiate(my_contract::Instance::some_constructor(arg1, arg2)).await?;
 ```
 
 And then call methods on your contract:
 
 ```rust
-let result = instance.some_getter(&conn, arg1, arg2).await?;
-let tx_info = instance.some_mutator(&conn, arg1, arg2).await?;
+let result = conn.read(instance.some_getter(arg1, arg2)).await?;
+let tx_info = conn.exec(instance.some_mutator(arg1, arg2)).await?;
 ```
 
 Note that any methods that have names like `Trait::method_name` will be grouped into traits in the generated module. You
@@ -84,7 +84,7 @@ might encounter this if you're using openbrush, for example their `PSP22` implem
 
 ```rust
 use my_contract::PSP22 as _;
-instance.balance_of(&conn, account_id).await?
+conn.read(instance.balance_of(account_id)).await?
 ```
 
 In the examples above, `conn` is anything that implements `ink_wrapper_types::Connection` (and
@@ -98,7 +98,7 @@ for the connection in `aleph_client`.
 ```rust
 use ink_wrapper_types::Connection as _;
 
-let tx_info = instance.some_mutator(&conn, arg1, arg2).await?;
+let tx_info = conn.exec(instance.some_mutator(arg1, arg2)).await?;
 let all_events = conn.get_contract_events(tx_info).await?;
 let contract_events = all_events.for_contract(instance);
 let sub_contract_events = all_events.for_contract(sub_contract);
@@ -118,13 +118,13 @@ ink-wrapper -m my_contract.json --wasm-path ../contracts/target/ink/my_contract.
 you will also be able to use the generated wrapper to upload the contract:
 
 ```rust
-my_contract::upload(&conn).await
+conn.upload(my_contract::upload()).await
 ```
 
-Note, that the generated `upload` function will return `Ok(TxInfo)` so long as the transaction was
-submitted successfully and the code hash of the metadata matches the uploaded code. If the code already existed on the
-chain, no error is returned. You can verify this condition yourself by looking at the events at the returned `TxInfo` and
-checking if they contain a `CodeStored` event.
+Note, that the `upload` function will return `Ok(TxInfo)` so long as the transaction was submitted successfully and the
+code hash of the metadata matches the uploaded code. If the code already existed on the chain, no error is returned. You
+can verify this condition yourself by looking at the events at the returned `TxInfo` and checking if they contain a
+`CodeStored` event.
 
 ### Example
 

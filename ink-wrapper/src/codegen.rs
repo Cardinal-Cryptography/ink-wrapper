@@ -89,13 +89,10 @@ pub fn generate(
 fn define_upload(wasm_path: &str) -> rust::Tokens {
     quote! {
         #[allow(dead_code)]
-        pub async fn upload<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(conn: &C) ->
-            Result<TxInfo, E>
+        pub fn upload() -> ink_wrapper_types::UploadCall
         {
             let wasm = include_bytes!($(quoted(wasm_path)));
-            let tx_info = conn.upload((*wasm).into(), CODE_HASH.into()).await?;
-
-            Ok(tx_info)
+            ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH)
         }
     }
 }
@@ -237,22 +234,16 @@ fn define_constructor(
     constructor: &ConstructorSpec<PortableForm>,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", constructor.args());
-    let salt = &new_name("salt", constructor.args());
     let data = &new_name("data", constructor.args());
-    let account_id = &new_name("account_id", constructor.args());
 
     quote! {
         $(docs(constructor.docs()))
         #[allow(dead_code, clippy::too_many_arguments)]
-        pub async fn $(&constructor.label)<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
-            $(conn): &C,
-            $(salt): Vec<u8>,
-            $(message_args(&constructor.args, metadata))
-        ) -> Result<Self, E> {
+        pub fn $(&constructor.label)($(message_args(&constructor.args, metadata))) ->
+            ink_wrapper_types::InstantiateCall<Self>
+        {
             let $(data) = $(gather_args(constructor.selector().to_bytes(), constructor.args()));
-            let $(account_id) = conn.instantiate(CODE_HASH, $(salt), $(data)).await?;
-            Ok(Self { account_id: $(account_id) })
+            ink_wrapper_types::InstantiateCall::new(CODE_HASH, $(data))
         }
         $[ '\n' ]
     }
@@ -277,7 +268,6 @@ fn define_reader(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
     let data = &new_name("data", message.args());
 
     quote! {
@@ -286,7 +276,7 @@ fn define_reader(
         $(define_reader_head(message, visibility, metadata))
         {
             let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
-            $(conn).read(self.account_id, $(data)).await
+            ink_wrapper_types::ReadCall::new(self.account_id, $(data))
         }
 
         $[ '\n' ]
@@ -298,14 +288,9 @@ fn define_reader_head(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
-
     quote! {
-            $(visibility) async fn $(message.method_name())<TxInfo, E, C: ink_wrapper_types::Connection<TxInfo, E>>(
-                &self,
-                $(conn): &C, $(message_args(message.args(), metadata))
-            ) ->
-                Result<$(type_ref(message.return_type().opt_type().unwrap().ty().id(), metadata)), E>
+        $(visibility) fn $(message.method_name())(&self, $(message_args(message.args(), metadata))) ->
+            ink_wrapper_types::ReadCall<$(type_ref(message.return_type().opt_type().unwrap().ty().id(), metadata))>
     }
 }
 
@@ -315,7 +300,6 @@ fn define_mutator(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
     let data = &new_name("data", message.args());
 
     quote! {
@@ -324,7 +308,7 @@ fn define_mutator(
         $(define_mutator_head(message, visibility, metadata))
         {
             let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
-            $(conn).exec(self.account_id, $(data)).await
+            ink_wrapper_types::ExecCall::new(self.account_id, $(data))
         }
 
         $[ '\n' ]
@@ -336,13 +320,9 @@ fn define_mutator_head(
     visibility: &str,
     metadata: &InkProject,
 ) -> rust::Tokens {
-    let conn = &new_name("conn", message.args());
-
     quote! {
-        $(visibility) async fn $(message.method_name())<TxInfo, E, C: ink_wrapper_types::SignedConnection<TxInfo, E>>(
-            &self, $(conn): &C,
-            $(message_args(message.args(), metadata))
-        ) -> Result<TxInfo, E>
+        $(visibility) fn $(message.method_name())(&self, $(message_args(message.args(), metadata))) ->
+            ink_wrapper_types::ExecCall
     }
 }
 

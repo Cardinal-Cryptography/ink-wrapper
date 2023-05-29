@@ -2,6 +2,7 @@ use aleph_client::{
     api::contracts::events::ContractEmitted,
     pallet_contracts::wasm::Determinism,
     pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi},
+    sp_core::H256,
     sp_weights::weight_v2::Weight,
     utility::BlocksApi,
     AsConnection, Balance, CodeHash, ConnectionApi, SignedConnectionApi, TxInfo, TxStatus,
@@ -14,6 +15,8 @@ use pallet_contracts_primitives::{
 };
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
+
+use crate::{ExecCall, InstantiateCall, ReadCall, UploadCall};
 
 /// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
 #[derive(Encode)]
@@ -47,11 +50,16 @@ pub struct CodeUploadRequest {
 
 #[async_trait]
 impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Error> for C {
-    async fn read<T: scale::Decode>(&self, account_id: AccountId, data: Vec<u8>) -> Result<T> {
-        let result = dry_run(self.as_connection(), account_id, account_id, data)
-            .await?
-            .result
-            .map_err(|e| anyhow!("Contract exec failed {:?}", e))?;
+    async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T> {
+        let result = dry_run(
+            self.as_connection(),
+            call.account_id,
+            call.account_id,
+            call.data,
+        )
+        .await?
+        .result
+        .map_err(|e| anyhow!("Contract exec failed {:?}", e))?;
 
         Ok(scale::Decode::decode(&mut result.data.as_slice())
             .context("Failed to decode contract call result")?)
@@ -77,14 +85,14 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 }
 
 #[async_trait]
-impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
-    async fn upload(&self, wasm: Vec<u8>, code_hash: Vec<u8>) -> Result<TxInfo> {
+impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
+    async fn upload(&self, call: UploadCall) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
         let determinism = Determinism::Deterministic;
 
         let args = CodeUploadRequest {
             origin,
-            code: wasm.clone(),
+            code: call.wasm.clone(),
             storage_deposit_limit: None,
             determinism,
         };
@@ -96,27 +104,31 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             .map_err(|e| anyhow!("Code upload failed {:?}", e))?
             .code_hash;
 
-        if actual_code_hash.as_ref() != code_hash {
+        let expected_code_hash = H256(call.expected_code_hash);
+        if actual_code_hash != expected_code_hash {
             return Err(anyhow!(
                 "Code hash mismatch: expected {:?}, got {:?}",
-                code_hash,
+                expected_code_hash,
                 actual_code_hash
             ));
         }
 
         let tx_info = self
-            .upload_code(wasm, None, Determinism::Deterministic, TxStatus::Finalized)
+            .upload_code(
+                call.wasm,
+                None,
+                Determinism::Deterministic,
+                TxStatus::Finalized,
+            )
             .await?;
 
         Ok(tx_info)
     }
+}
 
-    async fn instantiate(
-        &self,
-        code_hash: [u8; 32],
-        salt: Vec<u8>,
-        data: Vec<u8>,
-    ) -> Result<AccountId> {
+#[async_trait]
+impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
+    async fn instantiate<T: Send + From<AccountId>>(&self, call: InstantiateCall<T>) -> Result<T> {
         let origin = self.account_id().clone().into();
         let value = 0;
 
@@ -125,9 +137,9 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             value,
             gas_limit: None,
             storage_deposit_limit: None,
-            code: Code::Existing(code_hash.into()),
-            data: data.clone(),
-            salt: salt.clone(),
+            code: Code::Existing(call.code_hash.into()),
+            data: call.data.clone(),
+            salt: call.salt.clone(),
         };
 
         let params = rpc_params!["ContractsApi_instantiate", Bytes(args.encode())];
@@ -140,31 +152,31 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 
         ContractsUserApi::instantiate(
             self,
-            code_hash.into(),
+            call.code_hash.into(),
             value,
             Weight {
                 ref_time: dry_run_results.gas_required.ref_time(),
                 proof_size: dry_run_results.gas_required.proof_size(),
             },
             None,
-            data,
-            salt,
+            call.data,
+            call.salt,
             TxStatus::Finalized,
         )
         .await?;
 
-        Ok(account_id)
+        Ok(account_id.into())
     }
 
-    async fn exec(&self, account_id: ink_primitives::AccountId, data: Vec<u8>) -> Result<TxInfo> {
+    async fn exec(&self, call: ExecCall) -> Result<TxInfo> {
         let result = dry_run(
             self.as_connection(),
-            account_id,
+            call.account_id,
             self.account_id().clone(),
-            data.clone(),
+            call.data.clone(),
         )
         .await?;
-        let account_id: [u8; 32] = *account_id.as_ref();
+        let account_id: [u8; 32] = *call.account_id.as_ref();
 
         self.call(
             account_id.into(),
@@ -174,7 +186,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
                 proof_size: result.gas_required.proof_size(),
             },
             None,
-            data,
+            call.data,
             TxStatus::Finalized,
         )
         .await
