@@ -36,6 +36,9 @@ impl<T: Send> InstantiateCall<T> {
     }
 }
 
+/// Represents a contract call to a payable constructor that still needs the value transferred to be specified.
+/// Use the `with_value()` method to set the value.
+#[derive(Debug, Clone)]
 pub struct InstantiateCallNeedsValue<T: Send> {
     /// The code hash of the contract to instantiate.
     pub code_hash: [u8; 32],
@@ -85,6 +88,7 @@ impl ExecCall {
 }
 
 /// Reperesents a contract call to a payable method that still needs the value transferred to be specified.
+/// Use the `with_value()` method to set the value.
 #[derive(Debug, Clone)]
 pub struct ExecCallNeedsValue {
     /// The account id of the contract to call.
