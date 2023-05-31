@@ -55,6 +55,7 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
             self.as_connection(),
             call.account_id,
             call.account_id,
+            0,
             call.data,
         )
         .await?
@@ -128,9 +129,12 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 
 #[async_trait]
 impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
-    async fn instantiate<T: Send + From<AccountId>>(&self, call: InstantiateCall<T>) -> Result<T> {
+    async fn instantiate_tx<T: Send + From<AccountId>>(
+        &self,
+        call: InstantiateCall<T>,
+    ) -> Result<(T, TxInfo)> {
         let origin = self.account_id().clone().into();
-        let value = 0;
+        let value = call.value;
 
         let args = InstantiateRequest {
             origin,
@@ -150,7 +154,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             .map_err(|e| anyhow!("Contract instantiation failed {:?}", e))?
             .account_id;
 
-        ContractsUserApi::instantiate(
+        let tx_info = ContractsUserApi::instantiate(
             self,
             call.code_hash.into(),
             value,
@@ -165,7 +169,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         )
         .await?;
 
-        Ok(account_id.into())
+        Ok((account_id.into(), tx_info))
     }
 
     async fn exec(&self, call: ExecCall) -> Result<TxInfo> {
@@ -173,6 +177,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             self.as_connection(),
             call.account_id,
             self.account_id().clone(),
+            call.value,
             call.data.clone(),
         )
         .await?;
@@ -180,7 +185,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 
         self.call(
             account_id.into(),
-            0,
+            call.value,
             Weight {
                 ref_time: result.gas_required.ref_time(),
                 proof_size: result.gas_required.proof_size(),
@@ -197,12 +202,13 @@ async fn dry_run<A1: AsRef<[u8; 32]>, A2: AsRef<[u8; 32]>>(
     conn: &aleph_client::Connection,
     contract: A1,
     call_as: A2,
+    value: Balance,
     data: Vec<u8>,
 ) -> Result<ContractExecResult<Balance>> {
     let args = ContractCallArgs {
         origin: (*call_as.as_ref()).into(),
         dest: (*contract.as_ref()).into(),
-        value: 0,
+        value,
         gas_limit: None,
         input_data: data,
         storage_deposit_limit: None,

@@ -16,6 +16,8 @@ pub struct InstantiateCall<T: Send> {
     pub data: Vec<u8>,
     /// The salt to use for the contract.
     pub salt: Vec<u8>,
+    /// The value to be sent with the call.
+    pub value: u128,
     /// A marker for the type of contract to instantiate.
     _contract: PhantomData<T>,
 }
@@ -27,6 +29,7 @@ impl<T: Send> InstantiateCall<T> {
             code_hash,
             data,
             salt: vec![],
+            value: 0,
             _contract: Default::default(),
         }
     }
@@ -38,6 +41,32 @@ impl<T: Send> InstantiateCall<T> {
     }
 }
 
+pub struct InstantiateCallNeedsValue<T: Send> {
+    /// The code hash of the contract to instantiate.
+    pub code_hash: [u8; 32],
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// A marker for the type of contract to instantiate.
+    _contract: PhantomData<T>,
+}
+
+impl<T: Send> InstantiateCallNeedsValue<T> {
+    pub fn new(code_hash: [u8; 32], data: Vec<u8>) -> Self {
+        Self {
+            code_hash,
+            data,
+            _contract: Default::default(),
+        }
+    }
+
+    pub fn with_value(self, value: u128) -> InstantiateCall<T> {
+        InstantiateCall {
+            value,
+            ..InstantiateCall::new(self.code_hash, self.data)
+        }
+    }
+}
+
 /// Represents a mutating contract call to be made.
 #[derive(Debug, Clone)]
 pub struct ExecCall {
@@ -45,12 +74,42 @@ pub struct ExecCall {
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
+    /// The value to be sent with the call.
+    pub value: u128,
 }
 
 impl ExecCall {
     /// Create a new exec call.
     pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self {
+            account_id,
+            data,
+            value: 0,
+        }
+    }
+}
+
+/// Reperesents a contract call to a payable method that still needs the value transferred to be specified.
+#[derive(Debug, Clone)]
+pub struct ExecCallNeedsValue {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+}
+
+impl ExecCallNeedsValue {
+    /// Create a new needs value call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
         Self { account_id, data }
+    }
+
+    /// Set the value to be sent with the call.
+    pub fn with_value(self, value: u128) -> ExecCall {
+        ExecCall {
+            value,
+            ..ExecCall::new(self.account_id, self.data)
+        }
     }
 }
 
@@ -110,10 +169,19 @@ pub trait UploadConnection<TxInfo, E>: Sync {
 #[async_trait]
 pub trait SignedConnection<TxInfo, E>: Sync {
     /// Instantiate a contract according to the given `call`.
+    async fn instantiate_tx<T: Send + From<AccountId>>(
+        &self,
+        call: InstantiateCall<T>,
+    ) -> Result<(T, TxInfo), E>;
+
+    /// A convenience method that unpacks the result of `instantiate_tx` if you're not interested in the `TxInfo`.
     async fn instantiate<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
-    ) -> Result<T, E>;
+    ) -> Result<T, E> {
+        let (contract, _) = self.instantiate_tx(call).await?;
+        Ok(contract)
+    }
 
     /// Perform the given mutating call.
     async fn exec(&self, call: ExecCall) -> Result<TxInfo, E>;
