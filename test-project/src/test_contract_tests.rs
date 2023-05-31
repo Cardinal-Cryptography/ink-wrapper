@@ -168,3 +168,37 @@ async fn test_upload() -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_receiving_value() -> Result<()> {
+    let (conn, contract) = connect_and_deploy().await?;
+
+    let tx_info = conn.exec(contract.receive_value().with_value(123)).await?;
+    let events = conn.get_contract_events(tx_info).await?;
+    let events = events.for_contract(contract);
+
+    assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_receiving_value_in_constructor() -> Result<()> {
+    let conn = connect_as_test_account().await?;
+
+    let mut salt = vec![0; 32];
+    rand::thread_rng().fill_bytes(&mut salt);
+    let (contract, tx_info) = conn
+        .instantiate_tx(
+            test_contract::Instance::payable_constructor()
+                .with_value(123)
+                .with_salt(salt),
+        )
+        .await?;
+    let events = conn.get_contract_events(tx_info).await?;
+    let events = events.for_contract(contract);
+
+    assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
+
+    Ok(())
+}

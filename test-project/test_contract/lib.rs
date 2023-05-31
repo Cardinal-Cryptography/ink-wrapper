@@ -35,6 +35,11 @@ mod test_contract {
     #[ink(event)]
     pub struct Event2;
 
+    #[ink(event)]
+    pub struct Received {
+        value: Balance,
+    }
+
     #[derive(Debug, Clone, Copy, Default, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo, StorageLayout))]
     pub struct Struct1 {
@@ -92,6 +97,17 @@ mod test_contract {
 
         #[ink(constructor)]
         pub fn default() -> Self {
+            Self {
+                ..Default::default()
+            }
+        }
+
+        #[ink(constructor, payable)]
+        pub fn payable_constructor() -> Self {
+            Self::env().emit_event(Received {
+                value: Self::env().transferred_value(),
+            });
+
             Self {
                 ..Default::default()
             }
@@ -250,6 +266,12 @@ mod test_contract {
         #[ink(message)]
         pub fn generate_ink_lang_error(&self) -> ink::LangError {
             ink::LangError::CouldNotReadInput
+        }
+
+        #[ink(message, payable)]
+        pub fn receive_value(&mut self) {
+            let value = Self::env().transferred_value();
+            Self::env().emit_event(Received { value });
         }
     }
 }

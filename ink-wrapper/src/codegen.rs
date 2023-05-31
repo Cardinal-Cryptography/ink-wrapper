@@ -240,10 +240,18 @@ fn define_constructor(
         $(docs(constructor.docs()))
         #[allow(dead_code, clippy::too_many_arguments)]
         pub fn $(&constructor.label)($(message_args(&constructor.args, metadata))) ->
-            ink_wrapper_types::InstantiateCall<Self>
+            $(if *constructor.payable() {
+                ink_wrapper_types::InstantiateCallNeedsValue<Self>
+            } else {
+                ink_wrapper_types::InstantiateCall<Self>
+            })
         {
             let $(data) = $(gather_args(constructor.selector().to_bytes(), constructor.args()));
-            ink_wrapper_types::InstantiateCall::new(CODE_HASH, $(data))
+            $(if *constructor.payable() {
+                ink_wrapper_types::InstantiateCallNeedsValue::new(CODE_HASH, $(data))
+            } else {
+                ink_wrapper_types::InstantiateCall::new(CODE_HASH, $(data))
+            })
         }
         $[ '\n' ]
     }
@@ -308,7 +316,11 @@ fn define_mutator(
         $(define_mutator_head(message, visibility, metadata))
         {
             let $(data) = $(gather_args(message.selector().to_bytes(), message.args()));
-            ink_wrapper_types::ExecCall::new(self.account_id, $(data))
+            $(if message.payable() {
+                ink_wrapper_types::ExecCallNeedsValue::new(self.account_id, $(data))
+            } else {
+                ink_wrapper_types::ExecCall::new(self.account_id, $(data))
+            })
         }
 
         $[ '\n' ]
@@ -322,7 +334,11 @@ fn define_mutator_head(
 ) -> rust::Tokens {
     quote! {
         $(visibility) fn $(message.method_name())(&self, $(message_args(message.args(), metadata))) ->
-            ink_wrapper_types::ExecCall
+            $(if message.payable() {
+                ink_wrapper_types::ExecCallNeedsValue
+            } else {
+                ink_wrapper_types::ExecCall
+            })
     }
 }
 

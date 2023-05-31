@@ -1,7 +1,7 @@
 use ink_primitives::AccountId;
 
-/// A convenience trait for converting different wrappers around an [u8; 32] into an
-/// `ink_primitives::AccountId`. Implemented for any AsRef<[u8; 32]> by default.
+/// A convenience trait for converting different wrappers around an `[u8; 32]` into an
+/// `ink_primitives::AccountId`. Implemented for any `AsRef<[u8; 32]>` by default.
 pub trait ToAccountId {
     fn to_account_id(&self) -> AccountId;
 }
