@@ -202,7 +202,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             },
             None,
             call.data,
-            TxStatus::Finalized,
+            call.tx_status.into(),
         )
         .await
     }

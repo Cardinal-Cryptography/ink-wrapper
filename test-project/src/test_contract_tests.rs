@@ -221,3 +221,16 @@ async fn test_constructor_waiting_for_submitted() -> Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_exec_waiting_for_submitted() -> Result<()> {
+    let (conn, contract) = connect_and_deploy().await?;
+
+    let tx_info = conn
+        .exec(contract.set_u32(123).with_tx_status(TxStatus::Submitted))
+        .await?;
+
+    assert!(tx_info.block_hash == [0; 32].into());
+
+    Ok(())
+}
