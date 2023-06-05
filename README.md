@@ -1,5 +1,7 @@
 # ink-wrapper
 
+![ink-wrapper](https://img.shields.io/crates/v/ink-wrapper.svg)
+
 `ink-wrapper` is a tool that generates type-safe code for calling a substrate smart contract based on the metadata
 (`.json`) file for that contract.
 
