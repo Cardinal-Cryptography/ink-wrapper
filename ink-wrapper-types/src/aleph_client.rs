@@ -48,6 +48,16 @@ pub struct CodeUploadRequest {
     determinism: Determinism,
 }
 
+impl From<crate::TxStatus> for TxStatus {
+    fn from(status: crate::TxStatus) -> Self {
+        match status {
+            crate::TxStatus::Submitted => TxStatus::Submitted,
+            crate::TxStatus::Finalized => TxStatus::Finalized,
+            crate::TxStatus::InBlock => TxStatus::InBlock,
+        }
+    }
+}
+
 #[async_trait]
 impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Error> for C {
     async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T> {
@@ -119,7 +129,7 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
                 call.wasm,
                 None,
                 Determinism::Deterministic,
-                TxStatus::Finalized,
+                call.tx_status.into(),
             )
             .await?;
 
@@ -165,7 +175,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             None,
             call.data,
             call.salt,
-            TxStatus::Finalized,
+            call.tx_status.into(),
         )
         .await?;
 
@@ -192,7 +202,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             },
             None,
             call.data,
-            TxStatus::Finalized,
+            call.tx_status.into(),
         )
         .await
     }

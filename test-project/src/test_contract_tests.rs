@@ -2,18 +2,22 @@ use aleph_client::SignedConnection;
 use anyhow::Result;
 use assert2::assert;
 use ink_primitives::AccountId;
-use ink_wrapper_types::{Connection as _, SignedConnection as _, UploadConnection as _};
+use ink_wrapper_types::{Connection as _, SignedConnection as _, TxStatus, UploadConnection as _};
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
 
 use crate::{helpers::connect_as_test_account, test_contract};
 
-async fn connect_and_deploy() -> Result<(SignedConnection, test_contract::Instance)> {
-    let conn = connect_as_test_account().await?;
+fn random_salt() -> Vec<u8> {
     let mut salt = vec![0; 32];
     rand::thread_rng().fill_bytes(&mut salt);
+    salt
+}
+
+async fn connect_and_deploy() -> Result<(SignedConnection, test_contract::Instance)> {
+    let conn = connect_as_test_account().await?;
     let contract = conn
-        .instantiate(test_contract::Instance::default().with_salt(salt))
+        .instantiate(test_contract::Instance::default().with_salt(random_salt()))
         .await?;
 
     Ok((conn, contract))
@@ -186,19 +190,60 @@ async fn test_receiving_value() -> Result<()> {
 async fn test_receiving_value_in_constructor() -> Result<()> {
     let conn = connect_as_test_account().await?;
 
-    let mut salt = vec![0; 32];
-    rand::thread_rng().fill_bytes(&mut salt);
     let (contract, tx_info) = conn
         .instantiate_tx(
             test_contract::Instance::payable_constructor()
                 .with_value(123)
-                .with_salt(salt),
+                .with_salt(random_salt()),
         )
         .await?;
     let events = conn.get_contract_events(tx_info).await?;
     let events = events.for_contract(contract);
 
     assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_constructor_waiting_for_submitted() -> Result<()> {
+    let conn = connect_as_test_account().await?;
+
+    let (_contract, tx_info) = conn
+        .instantiate_tx(
+            test_contract::Instance::default()
+                .with_salt(random_salt())
+                .with_tx_status(TxStatus::Submitted),
+        )
+        .await?;
+
+    assert!(tx_info.block_hash == [0; 32].into());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_exec_waiting_for_submitted() -> Result<()> {
+    let (conn, contract) = connect_and_deploy().await?;
+
+    let tx_info = conn
+        .exec(contract.set_u32(123).with_tx_status(TxStatus::Submitted))
+        .await?;
+
+    assert!(tx_info.block_hash == [0; 32].into());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_upload_waiting_for_submitted() -> Result<()> {
+    let conn = connect_as_test_account().await?;
+
+    let tx_info = conn
+        .upload(test_contract::upload().with_tx_status(TxStatus::Submitted))
+        .await?;
+
+    assert!(tx_info.block_hash == [0; 32].into());
 
     Ok(())
 }

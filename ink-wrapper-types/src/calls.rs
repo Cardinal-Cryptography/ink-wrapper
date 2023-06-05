@@ -2,6 +2,14 @@ use std::marker::PhantomData;
 
 use ink_primitives::AccountId;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TxStatus {
+    #[default]
+    Finalized,
+    InBlock,
+    Submitted,
+}
+
 /// Represents a call to a contract constructor.
 #[derive(Debug, Clone)]
 pub struct InstantiateCall<T: Send> {
@@ -13,6 +21,8 @@ pub struct InstantiateCall<T: Send> {
     pub salt: Vec<u8>,
     /// The value to be sent with the call.
     pub value: u128,
+    /// The tx_status to wait on.
+    pub tx_status: TxStatus,
     /// A marker for the type of contract to instantiate.
     _contract: PhantomData<T>,
 }
@@ -25,6 +35,7 @@ impl<T: Send> InstantiateCall<T> {
             data,
             salt: vec![],
             value: 0,
+            tx_status: Default::default(),
             _contract: Default::default(),
         }
     }
@@ -32,6 +43,12 @@ impl<T: Send> InstantiateCall<T> {
     /// Set the salt to use for the instantiation.
     pub fn with_salt(mut self, salt: Vec<u8>) -> Self {
         self.salt = salt;
+        self
+    }
+
+    /// Set the tx_status to wait on.
+    pub fn with_tx_status(mut self, tx_status: TxStatus) -> Self {
+        self.tx_status = tx_status;
         self
     }
 }
@@ -74,6 +91,8 @@ pub struct ExecCall {
     pub data: Vec<u8>,
     /// The value to be sent with the call.
     pub value: u128,
+    /// The tx_status to wait on.
+    pub tx_status: TxStatus,
 }
 
 impl ExecCall {
@@ -83,7 +102,13 @@ impl ExecCall {
             account_id,
             data,
             value: 0,
+            tx_status: Default::default(),
         }
+    }
+
+    pub fn with_tx_status(mut self, tx_status: TxStatus) -> Self {
+        self.tx_status = tx_status;
+        self
     }
 }
 
@@ -140,6 +165,8 @@ pub struct UploadCall {
     pub wasm: Vec<u8>,
     /// The expected code hash of the uploaded code.
     pub expected_code_hash: [u8; 32],
+    /// The tx_status to wait on.
+    pub tx_status: TxStatus,
 }
 
 impl UploadCall {
@@ -148,6 +175,13 @@ impl UploadCall {
         Self {
             wasm,
             expected_code_hash,
+            tx_status: Default::default(),
         }
+    }
+
+    /// Set the tx_status to wait on.
+    pub fn with_tx_status(mut self, tx_status: TxStatus) -> Self {
+        self.tx_status = tx_status;
+        self
     }
 }

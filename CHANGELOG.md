@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Ability to send native tokens with calls
 - Ability to get the `tx_info` for a constructor call
+- Ability to set the `tx_status` to wait for when submitting calls
 
 ### Fixed
 
