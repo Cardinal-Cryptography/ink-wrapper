@@ -129,7 +129,7 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
                 call.wasm,
                 None,
                 Determinism::Deterministic,
-                TxStatus::Finalized,
+                call.tx_status.into(),
             )
             .await?;
 

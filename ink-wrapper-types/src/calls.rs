@@ -165,6 +165,8 @@ pub struct UploadCall {
     pub wasm: Vec<u8>,
     /// The expected code hash of the uploaded code.
     pub expected_code_hash: [u8; 32],
+    /// The tx_status to wait on.
+    pub tx_status: TxStatus,
 }
 
 impl UploadCall {
@@ -173,6 +175,13 @@ impl UploadCall {
         Self {
             wasm,
             expected_code_hash,
+            tx_status: Default::default(),
         }
+    }
+
+    /// Set the tx_status to wait on.
+    pub fn with_tx_status(mut self, tx_status: TxStatus) -> Self {
+        self.tx_status = tx_status;
+        self
     }
 }
