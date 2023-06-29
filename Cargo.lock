@@ -1200,7 +1200,7 @@ dependencies = [
 
 [[package]]
 name = "ink-wrapper"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1215,7 +1215,7 @@ dependencies = [
 
 [[package]]
 name = "ink-wrapper-types"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "aleph_client",
  "anyhow",
