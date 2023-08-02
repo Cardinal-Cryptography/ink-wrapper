@@ -28,9 +28,9 @@ pub fn generate(
         #[allow(dead_code)]
         pub const CODE_HASH: [u8; 32] = $(format!("{:?}", hex_to_bytes(&code_hash)));
 
-        $(for typ in metadata.registry().types() {
-            $(if typ.ty().is_custom() {
-                $(define_type(typ.ty(), metadata))
+        $(for typ in &metadata.registry().types {
+            $(if typ.ty.is_custom() {
+                $(define_type(&typ.ty, metadata))
             })
         })
 
@@ -160,7 +160,7 @@ fn group_messages(metadata: &InkProject) -> (MessageList, HashMap<String, Messag
 
 /// Generates a type definition for a custom type used in the contract.
 fn define_type(typ: &Type<PortableForm>, metadata: &InkProject) -> rust::Tokens {
-    match &typ.type_def() {
+    match &typ.type_def {
         TypeDef::Variant(variant) => define_variant(typ, variant, metadata),
         TypeDef::Composite(composite) => define_composite(typ, composite, metadata),
         _ => quote! {},
@@ -176,7 +176,7 @@ fn define_variant(
     quote! {
         #[derive(Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode)]
         pub enum $(typ.qualified_name()) {
-            $(for variant in variant.variants() {
+            $(for variant in &variant.variants {
                 $(match variant.aggregate_fields() {
                     Fields::Named(fields) => {
                         $(&variant.name) {
@@ -298,7 +298,7 @@ fn define_reader_head(
 ) -> rust::Tokens {
     quote! {
         $(visibility) fn $(message.method_name())(&self, $(message_args(message.args(), metadata))) ->
-            ink_wrapper_types::ReadCall<$(type_ref(message.return_type().opt_type().unwrap().ty().id(), metadata))>
+            ink_wrapper_types::ReadCall<$(type_ref(message.return_type().opt_type().unwrap().ty().id, metadata))>
     }
 }
 
@@ -367,7 +367,7 @@ fn gather_args(selector: &[u8], args: &[MessageParamSpec<PortableForm>]) -> rust
 fn message_args(args: &[MessageParamSpec<PortableForm>], metadata: &InkProject) -> rust::Tokens {
     quote! {
         $(for arg in args {
-            $(arg.label()): $(type_ref(arg.ty().ty().id(), metadata)),
+            $(arg.label()): $(type_ref(arg.ty().ty().id, metadata)),
         })
     }
 }
@@ -382,7 +382,7 @@ fn define_event(event: &EventSpec<PortableForm>, metadata: &InkProject) -> rust:
         $(event.label()) {
             $(for field in event.args() {
                 $(docs(field.docs()))
-                $(field.label()): $(type_ref_prefix(field.ty().ty().id(), metadata, "super::")),
+                $(field.label()): $(type_ref_prefix(field.ty().ty().id, metadata, "super::")),
             })
         },
 
@@ -402,7 +402,7 @@ fn type_ref_prefix(id: u32, metadata: &InkProject, prefix: &str) -> String {
     let typ = resolve(metadata, id);
     let generic_prefix = if typ.is_custom() { prefix } else { "" };
 
-    match typ.type_def() {
+    match &typ.type_def {
         TypeDef::Primitive(primitive) => type_ref_primitive(primitive),
         TypeDef::Tuple(tuple) => type_ref_tuple(tuple, metadata, prefix),
         TypeDef::Composite(_) => type_ref_generic(typ, metadata, generic_prefix),
@@ -419,14 +419,14 @@ fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject, prefix: &st
     let mut generics = String::new();
     let mut first = true;
 
-    for param in typ.type_params() {
+    for param in &typ.type_params {
         if first {
             first = false;
         } else {
             generics.push_str(", ");
         }
 
-        generics.push_str(&type_ref_prefix(param.ty().unwrap().id(), metadata, prefix));
+        generics.push_str(&type_ref_prefix(param.ty.unwrap().id, metadata, prefix));
     }
 
     format!("{}{}<{}>", prefix, typ.qualified_name(), generics)
@@ -462,9 +462,9 @@ fn type_ref_tuple(
     format!(
         "({})",
         tuple
-            .fields()
+            .fields
             .iter()
-            .map(|t| type_ref_prefix(t.id(), metadata, prefix))
+            .map(|t| type_ref_prefix(t.id, metadata, prefix))
             .collect::<Vec<_>>()
             .join(", ")
     )
@@ -478,8 +478,8 @@ fn type_ref_array(
 ) -> String {
     format!(
         "[{}; {}]",
-        type_ref_prefix(array.type_param().id(), metadata, prefix),
-        array.len()
+        type_ref_prefix(array.type_param.id, metadata, prefix),
+        array.len
     )
 }
 
@@ -491,7 +491,7 @@ fn type_ref_sequence(
 ) -> String {
     format!(
         "Vec<{}>",
-        type_ref_prefix(sequence.type_param().id(), metadata, prefix)
+        type_ref_prefix(sequence.type_param.id, metadata, prefix)
     )
 }
 
@@ -503,7 +503,7 @@ fn type_ref_compact(
 ) -> String {
     format!(
         "scale::Compact<{}>",
-        type_ref_prefix(compact.type_param().id(), metadata, prefix)
+        type_ref_prefix(compact.type_param.id, metadata, prefix)
     )
 }
 
