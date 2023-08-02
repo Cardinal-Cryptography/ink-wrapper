@@ -32,27 +32,27 @@ pub trait TypeExtensions {
 impl TypeExtensions for Type<PortableForm> {
     fn is_primitive(&self) -> bool {
         matches!(
-            self.type_def(),
+            self.type_def,
             TypeDef::Primitive(_) | TypeDef::Sequence(_) | TypeDef::Tuple(_) | TypeDef::Array(_)
         )
     }
 
     fn is_ink(&self) -> bool {
-        !self.path().segments().is_empty() && self.path().segments()[0] == "ink_primitives"
+        !self.path.segments.is_empty() && self.path.segments[0] == "ink_primitives"
     }
 
     fn is_ink_types(&self) -> bool {
-        self.path().segments().len() > 2
-            && self.path().segments()[0] == "ink_primitives"
-            && self.path().segments()[1] == "types"
+        self.path.segments.len() > 2
+            && self.path.segments[0] == "ink_primitives"
+            && self.path.segments[1] == "types"
     }
 
     fn is_builtin(&self) -> bool {
-        self.path().segments().len() == 1
+        self.path.segments.len() == 1
     }
 
     fn is_lang_error(&self) -> bool {
-        self.is_ink() && self.path().segments().last().unwrap() == "LangError"
+        self.is_ink() && self.path.segments.last().unwrap() == "LangError"
     }
 
     fn is_custom(&self) -> bool {
@@ -63,11 +63,11 @@ impl TypeExtensions for Type<PortableForm> {
         if self.is_lang_error() {
             "ink_wrapper_types::InkLangError".to_string()
         } else if self.is_ink_types() {
-            ["ink_primitives", self.path().segments().last().unwrap()].join("::")
+            ["ink_primitives", self.path.segments.last().unwrap()].join("::")
         } else if self.is_ink() {
-            self.path().segments().join("::")
+            self.path.segments.join("::")
         } else {
-            self.path().segments().last().unwrap().to_string()
+            self.path.segments.last().unwrap().to_string()
         }
     }
 }
@@ -108,20 +108,21 @@ pub enum Fields {
 
 impl From<Vec<&Field<PortableForm>>> for Fields {
     fn from(fields: Vec<&Field<PortableForm>>) -> Self {
-        if fields.iter().all(|f| f.name().is_none()) {
-            Fields::Unnamed(fields.iter().map(|f| f.ty().id()).collect())
+        if fields.iter().all(|f| f.name.is_none()) {
+            Fields::Unnamed(fields.iter().map(|f| f.ty.id).collect())
         } else {
             Fields::Named(
                 fields
                     .iter()
                     .map(|f| {
                         (
-                            f.name()
+                            f.name
+                                .as_ref()
                                 .unwrap_or_else(|| {
                                     panic!("{:?} has a mix of named and unnamed fields", fields)
                                 })
                                 .to_string(),
-                            f.ty().id(),
+                            f.ty.id,
                         )
                     })
                     .collect(),
@@ -137,7 +138,7 @@ pub trait AggregateFields {
 
 impl AggregateFields for Variant<PortableForm> {
     fn aggregate_fields(&self) -> Fields {
-        self.fields()
+        self.fields
             .iter()
             .collect::<Vec<&Field<PortableForm>>>()
             .into()
@@ -146,7 +147,7 @@ impl AggregateFields for Variant<PortableForm> {
 
 impl AggregateFields for TypeDefComposite<PortableForm> {
     fn aggregate_fields(&self) -> Fields {
-        self.fields()
+        self.fields
             .iter()
             .collect::<Vec<&Field<PortableForm>>>()
             .into()

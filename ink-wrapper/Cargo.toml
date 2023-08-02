@@ -18,7 +18,7 @@ clap = { version = "4.1", features = ["derive"] }
 anyhow = "1.0"
 genco = "0.17"
 hex = "0.4.3"
-ink_metadata = "=4.0.1"
-scale-info = "=2.3"
+ink_metadata = "4.2.1"
+scale-info = "2.3"
 # proc-macro2 is a dependency of genco, but >=1.0.56 breaks genco - see https://github.com/udoprog/genco/issues/39
 proc-macro2 = "=1.0.55"
