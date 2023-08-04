@@ -10,8 +10,10 @@
 Install the tool from [crates.io](https://crates.io):
 
 ```bash
-cargo install ink-wrapper --locked --force
+cargo +nightly-2023-04-19 install ink-wrapper --locked --force
 ```
+
+Note that this uses `nightly-2023-04-19`. You will need to install the toolchain first. You may try with just `+nightly` to use whatever nightly you already have installed, but this particular version should work. The crate will most likely compile on another toolchain, but generate broken code afterwards, see https://github.com/udoprog/genco/issues/39.
 
 ## Usage
 
