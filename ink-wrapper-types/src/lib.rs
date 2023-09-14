@@ -1,6 +1,8 @@
 #[cfg(feature = "aleph_client")]
 mod aleph_client;
 mod calls;
+#[cfg(feature = "drink")]
+pub mod drink;
 
 pub mod util;
 
@@ -30,7 +32,7 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     ) -> Result<(T, TxInfo), E>;
 
     /// A convenience method that unpacks the result of `instantiate_tx` if you're not interested in the `TxInfo`.
-    async fn instantiate<T: Send + From<AccountId>>(
+    async fn instantiate<T: Send + From<AccountId> + std::fmt::Debug>(
         &self,
         call: InstantiateCall<T>,
     ) -> Result<T, E> {

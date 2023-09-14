@@ -1,12 +1,12 @@
 [workspace]
 
-members = [
-  "ink-wrapper-types",
-  "ink-wrapper",
-]
+members = ["ink-wrapper-types", "ink-wrapper"]
 
 exclude = [
   "test-project",
   "test-project/test_contract",
-  "test-project/psp22_contract"
+  "test-project/psp22_contract",
 ]
+
+[workspace.dependencies]
+drink = { git = "https://github.com/Cardinal-Cryptography/drink", branch = "obrok/separate-instantiate" }
