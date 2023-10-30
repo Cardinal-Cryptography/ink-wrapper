@@ -98,7 +98,7 @@ dependencies = [
 [[package]]
 name = "aleph_client"
 version = "3.7.2"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=update-ink#f64eb695d212ce62ccf2569a7702738e823b4a10"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node#ce4e1ae38d27bac300a2cd2bd351598cf387c367"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2986,7 +2986,7 @@ dependencies = [
 [[package]]
 name = "primitives"
 version = "0.8.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node?branch=update-ink#f64eb695d212ce62ccf2569a7702738e823b4a10"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node#ce4e1ae38d27bac300a2cd2bd351598cf387c367"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
