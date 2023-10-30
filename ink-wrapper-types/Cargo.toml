@@ -23,7 +23,7 @@ ink_primitives = "4.3.0"
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [
     "derive",
 ] }
-pallet-contracts-primitives = { git = "https://github.com/Cardinal-Cryptography/substrate/", package = "pallet-contracts-primitives", version = "24.0.0" }
+pallet-contracts-primitives = { git = "https://github.com/Cardinal-Cryptography/substrate.git", package = "pallet-contracts-primitives", branch = "aleph-v1.0.0", default-features = false }
 subxt = { version = "0.30.1", optional = true }
 
 [features]

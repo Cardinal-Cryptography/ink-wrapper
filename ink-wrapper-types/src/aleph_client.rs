@@ -82,7 +82,7 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 
         for event in events.iter() {
             if let Some(event) = event?.as_event::<ContractEmitted>()? {
-                let account_id: [u8; 32] = event.contract.into();
+                let account_id: [u8; 32] = event.contract.0.into();
 
                 result.push(crate::ContractEvent {
                     account_id: account_id.into(),
