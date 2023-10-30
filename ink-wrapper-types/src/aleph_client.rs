@@ -1,7 +1,7 @@
 use aleph_client::{
     api::contracts::events::ContractEmitted,
     pallet_contracts::wasm::Determinism,
-    pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi},
+    pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi, EventRecord},
     sp_core::H256,
     sp_weights::weight_v2::Weight,
     utility::BlocksApi,
@@ -99,7 +99,7 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
     async fn upload(&self, call: UploadCall) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
-        let determinism = Determinism::Deterministic;
+        let determinism = Determinism::Enforced;
 
         let args = CodeUploadRequest {
             origin,
@@ -128,7 +128,7 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             .upload_code(
                 call.wasm,
                 None,
-                Determinism::Deterministic,
+                Determinism::Enforced,
                 call.tx_status.into(),
             )
             .await?;
@@ -157,7 +157,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         };
 
         let params = rpc_params!["ContractsApi_instantiate", Bytes(args.encode())];
-        let dry_run_results: ContractInstantiateResult<AccountId, Balance> =
+        let dry_run_results: ContractInstantiateResult<AccountId, Balance, EventRecord> =
             self.rpc_call("state_call".to_string(), params).await?;
         let account_id = dry_run_results
             .result
@@ -214,7 +214,7 @@ async fn dry_run<A1: AsRef<[u8; 32]>, A2: AsRef<[u8; 32]>>(
     call_as: A2,
     value: Balance,
     data: Vec<u8>,
-) -> Result<ContractExecResult<Balance>> {
+) -> Result<ContractExecResult<Balance, EventRecord>> {
     let args = ContractCallArgs {
         origin: (*call_as.as_ref()).into(),
         dest: (*contract.as_ref()).into(),
