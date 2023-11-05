@@ -142,7 +142,8 @@ async fn test_events() -> Result<()> {
                 a: 123,
                 b: struct2.clone(),
                 c: struct1.c,
-                d: (struct1, struct2)
+                d: (struct1.clone(), struct2),
+                e: Some(struct1),
             })
     );
     assert!(events[1] == Ok(Event::Event2 {}));

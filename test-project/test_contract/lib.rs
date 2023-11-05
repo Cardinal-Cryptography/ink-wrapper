@@ -31,6 +31,7 @@ mod test_contract {
         b: Struct2,
         c: [u64; 4],
         d: (Struct1, Struct2),
+        e: Option<Struct1>,
     }
 
     #[ink(event)]
@@ -260,6 +261,7 @@ mod test_contract {
                 b: self.struct2_val,
                 c: self.struct1_val.c,
                 d: (self.struct1_val, self.struct2_val),
+                e: Some(self.struct1_val),
             });
             Self::env().emit_event(Event2 {});
         }
