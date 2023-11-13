@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.0
+
 ### Changed
 
 - Updated ink to `4.2.1`
+
+### Fixed
+
+- Fix incorrect codegen on event fields with generic types (#60)
 
 ## 0.5.0
 
