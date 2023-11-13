@@ -400,13 +400,12 @@ fn type_ref(id: u32, metadata: &InkProject) -> String {
 /// The `prefix` is prepended to the type name if the type is a custom type.
 fn type_ref_prefix(id: u32, metadata: &InkProject, prefix: &str) -> String {
     let typ = resolve(metadata, id);
-    let generic_prefix = if typ.is_custom() { prefix } else { "" };
 
     match &typ.type_def {
         TypeDef::Primitive(primitive) => type_ref_primitive(primitive),
         TypeDef::Tuple(tuple) => type_ref_tuple(tuple, metadata, prefix),
-        TypeDef::Composite(_) => type_ref_generic(typ, metadata, generic_prefix),
-        TypeDef::Variant(_) => type_ref_generic(typ, metadata, generic_prefix),
+        TypeDef::Composite(_) => type_ref_generic(typ, metadata, prefix),
+        TypeDef::Variant(_) => type_ref_generic(typ, metadata, prefix),
         TypeDef::Array(array) => type_ref_array(array, metadata, prefix),
         TypeDef::Sequence(sequence) => type_ref_sequence(sequence, metadata, prefix),
         TypeDef::Compact(compact) => type_ref_compact(compact, metadata, prefix),
@@ -429,7 +428,8 @@ fn type_ref_generic(typ: &Type<PortableForm>, metadata: &InkProject, prefix: &st
         generics.push_str(&type_ref_prefix(param.ty.unwrap().id, metadata, prefix));
     }
 
-    format!("{}{}<{}>", prefix, typ.qualified_name(), generics)
+    let generic_prefix = if typ.is_custom() { prefix } else { "" };
+    format!("{}{}<{}>", generic_prefix, typ.qualified_name(), generics)
 }
 
 /// Generates a type reference to a primitive type.
