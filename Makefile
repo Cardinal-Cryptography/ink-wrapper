@@ -24,7 +24,7 @@ test_contract:
 
 .PHONY: upload-test-contract
 upload-test-contract: test_contract
-	cd test-project/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
+	cd test-project/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x || true
 
 .PHONY: psp22_contract
 psp22_contract:
@@ -32,7 +32,7 @@ psp22_contract:
 
 .PHONY: upload-psp22-contract
 upload-psp22-contract: psp22_contract
-	cd test-project/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
+	cd test-project/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x  || true
 
 .PHONY: test_contract.rs
 test_contract.rs: test_contract

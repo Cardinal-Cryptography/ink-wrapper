@@ -1,4 +1,4 @@
-FROM public.ecr.aws/p6e8q1z1/ink-dev:1.1.0
+FROM public.ecr.aws/p6e8q1z1/ink-dev:1.7.0
 ARG UID
 ARG GID
 

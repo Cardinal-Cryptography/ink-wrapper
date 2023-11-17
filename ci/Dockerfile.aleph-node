@@ -1,4 +1,4 @@
-FROM public.ecr.aws/p6e8q1z1/aleph-node:r-10.0
+FROM public.ecr.aws/p6e8q1z1/aleph-node:r-12.1
 
 # 1. Save node and sudo account ids for convenience
 # 2. Prepare the chainspec
@@ -22,6 +22,5 @@ ENTRYPOINT aleph-node --chain chainspec.json \
   --base-path /node/$(cat /node/node_account_id)/ \
   --node-key-file /node/$(cat /node/node_account_id)/p2p_secret \
   --validator \
-  --execution Native \
   --public-validator-addresses 192.0.0.1:5678 \
-  --ws-port 9944
+  --rpc-port 9944

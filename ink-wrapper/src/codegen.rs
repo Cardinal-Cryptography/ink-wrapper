@@ -21,7 +21,7 @@ pub fn generate(
     let (top_level_messages, trait_messages) = group_messages(metadata);
 
     quote! {
-        $("// This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).")
+        // $("// This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).")
 
         $(register(encode))
 
@@ -508,12 +508,13 @@ fn type_ref_compact(
 }
 
 /// Generates a docstring from a list of doc lines.
-fn docs(lines: &[String]) -> String {
-    lines
-        .iter()
-        .map(|line| format!("/// {}", line))
-        .collect::<Vec<_>>()
-        .join("\n")
+fn docs(_lines: &[String]) -> String {
+    "".to_string()
+    // lines
+    //     .iter()
+    //     .map(|line| format!("/// {}", line))
+    //     .collect::<Vec<_>>()
+    //     .join("\n")
 }
 
 /// Resolves the type with the given ID.
