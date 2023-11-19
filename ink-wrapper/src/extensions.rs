@@ -65,10 +65,6 @@ impl TypeExtensions for Type<PortableForm> {
         } else if self.is_ink_types() {
             let last_segment = quote::format_ident!("{}", self.path.segments.last().unwrap());
             quote::quote! { ink_primitives::#last_segment }
-        } else if self.is_ink() {
-            // TO remove
-            let path = self.path.segments.join("::");
-            quote::quote! { #path }
         } else {
             let last_segment = quote::format_ident!("{}", self.path.segments.last().unwrap());
             quote::quote! { #last_segment }
