@@ -26,7 +26,7 @@ pub trait TypeExtensions {
     ///
     /// It's the full path to the type for ink! types and just the name for other types. That's because any custom types
     /// for the contract will be defined in the same module as the functions that use them.
-    fn qualified_name(&self) -> String;
+    fn qualified_name(&self) -> proc_macro2::TokenStream;
 }
 
 impl TypeExtensions for Type<PortableForm> {
@@ -59,15 +59,18 @@ impl TypeExtensions for Type<PortableForm> {
         !self.is_primitive() && !self.is_ink() && !self.is_builtin()
     }
 
-    fn qualified_name(&self) -> String {
+    fn qualified_name(&self) -> proc_macro2::TokenStream {
         if self.is_lang_error() {
-            "ink_wrapper_types::InkLangError".to_string()
+            quote::quote! { ink_wrapper_types::InkLangError }
         } else if self.is_ink_types() {
-            ["ink_primitives", self.path.segments.last().unwrap()].join("::")
+            let last_segment = quote::format_ident!("{}", self.path.segments.last().unwrap());
+            quote::quote! { ink_primitives::#last_segment }
         } else if self.is_ink() {
-            self.path.segments.join("::")
+            let path = self.path.segments.join("::");
+            quote::quote! { #path }
         } else {
-            self.path.segments.last().unwrap().to_string()
+            let last_segment = quote::format_ident!("{}", self.path.segments.last().unwrap());
+            quote::quote! { #last_segment }
         }
     }
 }
