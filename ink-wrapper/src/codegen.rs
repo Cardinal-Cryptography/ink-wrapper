@@ -4,8 +4,8 @@ use ink_metadata::{ConstructorSpec, EventSpec, InkProject, MessageParamSpec, Mes
 use proc_macro2::Ident;
 use quote::*;
 use scale_info::{
-    form::PortableForm, scale::Encode, Type, TypeDef, TypeDefArray, TypeDefCompact,
-    TypeDefComposite, TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant,
+    form::PortableForm, Type, TypeDef, TypeDefArray, TypeDefCompact, TypeDefComposite,
+    TypeDefPrimitive, TypeDefSequence, TypeDefTuple, TypeDefVariant,
 };
 
 use crate::extensions::*;
@@ -114,12 +114,11 @@ pub fn generate(
 }
 
 fn define_upload(wasm_path: &str) -> proc_macro2::TokenStream {
-    let path = format_ident!("{}", wasm_path);
     quote! {
         #[allow(dead_code)]
         pub fn upload() -> ink_wrapper_types::UploadCall
         {
-            let wasm = include_bytes!(#path)
+            let wasm = include_bytes!(#wasm_path);
             ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH)
         }
     }
@@ -204,7 +203,7 @@ fn named_variant(
         let typ = type_ref(*typ, metadata);
         let name = format_ident!("{}", name);
         quote! {
-            pub #name: #typ,
+            #name: #typ
         }
     });
     let name = format_ident!("{}", name);
@@ -265,7 +264,7 @@ fn define_composite(
                 let typ = type_ref(*typ, metadata);
                 let name = format_ident!("{}", name);
                 quote! {
-                    pub #name: #typ,
+                    pub #name: #typ
                 }
             });
             quote! {
@@ -310,18 +309,18 @@ fn define_constructor(
     let data = gather_args(constructor.selector().to_bytes(), constructor.args());
     let body = if *constructor.payable() {
         quote! {
-            let #data_ident = [#data];
-            ink_wrapper_types::InstantiateCallNeedsValue::new(CODE_HASH, data_ident)
+            let #data_ident = #data;
+            ink_wrapper_types::InstantiateCallNeedsValue::new(CODE_HASH, #data_ident)
         }
     } else {
         quote! {
-            let #data_ident = [#data];
-            ink_wrapper_types::InstantiateCall::new(CODE_HASH, data_ident)
+            let #data_ident = #data;
+            ink_wrapper_types::InstantiateCall::new(CODE_HASH, #data_ident)
         }
     };
 
     quote! {
-        #[doc = #docs]
+        #docs
         #[allow(dead_code, clippy::too_many_arguments)]
         pub fn #label ( #args ) -> #ret_res {
             #body
@@ -350,17 +349,16 @@ fn define_reader(
 ) -> proc_macro2::TokenStream {
     let data_ident = &new_name("data", message.args());
     let docs = docs(message.docs());
-
     let reader_head = define_reader_head(message, visibility, metadata);
     let args = gather_args(message.selector().to_bytes(), message.args());
 
     quote! {
-        #[doc = #docs]
+        #docs
         #[allow(dead_code, clippy::too_many_arguments)]
         #reader_head
         {
-            let #data_ident = [#args];
-            ink_wrapper_types::ReadCall::new(self.account_id, data_ident)
+            let #data_ident = #args;
+            ink_wrapper_types::ReadCall::new(self.account_id, #data_ident)
         }
     }
 }
@@ -376,7 +374,8 @@ fn define_reader_head(
     let visibility = if visibility.is_empty() {
         quote! {}
     } else {
-        quote! { #visibility }
+        let v = format_ident!("{}", visibility);
+        quote! { #v }
     };
     quote! {
         #visibility fn #method_name(&self, #args) ->
@@ -404,11 +403,11 @@ fn define_mutator(
         }
     };
     quote! {
-        #[docs = #docs]
+        #docs
         #[allow(dead_code, clippy::too_many_arguments)]
         #mutator_head
         {
-            let #data_ident = [#data];
+            let #data_ident = #data;
             #res
         }
     }
@@ -429,7 +428,8 @@ fn define_mutator_head(
     let visibility = if visibility.is_empty() {
         quote! {}
     } else {
-        quote! { #visibility }
+        let v = format_ident!("{}", visibility);
+        quote! { #v }
     };
     quote! {
         #visibility fn #method (&self, #message_args) -> #ret_type
@@ -446,16 +446,19 @@ fn gather_args(
     let selector_deref: Vec<u8> = selector.to_vec();
     if args.is_empty() {
         quote! {
-            #(#selector_deref),*
+            vec![#(#selector_deref),*]
         }
     } else {
-        let mut data = selector_deref;
-        for arg in args {
-            arg.label().encode_to(&mut data);
-        }
-        quote! {
-            #(#data),*
-        }
+        let data_ident = format_ident!("{}", new_name("data", args));
+        let args = args.iter().map(|arg| {
+            let arg_label = format_ident!("{}", arg.label());
+            quote! { #arg_label.encode_to(&mut #data_ident) }
+        });
+        quote!({
+            let mut #data_ident = vec![#(#selector_deref),*];
+            #(#args;)*
+            #data_ident
+        })
     }
 }
 
@@ -485,17 +488,17 @@ fn define_event(
     let event_fields = event.args().iter().map(|field| {
         let field_docs = docs(field.docs());
         let field_label = format_ident!("{}", field.label());
-        let field_type = type_ref_prefix(field.ty().ty().id, metadata, "super::");
+        let field_type = type_ref_prefix(field.ty().ty().id, metadata, "super");
         quote! {
-           #[doc = #field_docs]
+           #field_docs
            #field_label: #field_type
         }
     });
     quote! {
-        #[doc = #event_docs]
+        #event_docs
         #event_label {
             #(#event_fields),*
-        },
+        }
     }
 }
 
@@ -509,7 +512,6 @@ fn type_ref(id: u32, metadata: &InkProject) -> proc_macro2::TokenStream {
 /// The `prefix` is prepended to the type name if the type is a custom type.
 fn type_ref_prefix(id: u32, metadata: &InkProject, prefix: &str) -> proc_macro2::TokenStream {
     let typ = resolve(metadata, id);
-    let generic_prefix = if typ.is_custom() { prefix } else { "" };
 
     match &typ.type_def {
         TypeDef::Primitive(primitive) => {
@@ -517,8 +519,8 @@ fn type_ref_prefix(id: u32, metadata: &InkProject, prefix: &str) -> proc_macro2:
             quote! { #t }
         }
         TypeDef::Tuple(tuple) => type_ref_tuple(tuple, metadata, prefix),
-        TypeDef::Composite(_) => type_ref_generic(typ, metadata, generic_prefix),
-        TypeDef::Variant(_) => type_ref_generic(typ, metadata, generic_prefix),
+        TypeDef::Composite(_) => type_ref_generic(typ, metadata, prefix),
+        TypeDef::Variant(_) => type_ref_generic(typ, metadata, prefix),
         TypeDef::Array(array) => type_ref_array(array, metadata, prefix),
         TypeDef::Sequence(sequence) => type_ref_sequence(sequence, metadata, prefix),
         TypeDef::Compact(compact) => type_ref_compact(compact, metadata, prefix),
@@ -543,10 +545,11 @@ fn type_ref_generic(
         quote! { <#(#generics),*> }
     };
 
-    let prefix = if prefix.is_empty() {
+    let prefix = if prefix.is_empty() || !typ.is_custom() {
         quote! {}
     } else {
-        quote! { #prefix }
+        let prefix_ident = format_ident!("{}", prefix);
+        quote! { #prefix_ident:: }
     };
 
     let qualified_name = typ.qualified_name();
@@ -596,7 +599,8 @@ fn type_ref_array(
     prefix: &str,
 ) -> proc_macro2::TokenStream {
     let typ = type_ref_prefix(array.type_param.id, metadata, prefix);
-    let len = array.len;
+    // Cast to usize as otherwise we will get compilation errors on other archs.
+    let len = array.len as usize;
     quote! {
         [ #typ ; #len ]
     }
@@ -626,11 +630,15 @@ fn type_ref_compact(
     }
 }
 
-fn docs(lines: &[String]) -> String {
+fn docs(lines: &[String]) -> proc_macro2::TokenStream {
     if lines.is_empty() {
-        "".to_string()
+        quote! {}
     } else {
-        format!("{}", lines.join(""))
+        let d = format!(
+            "{}",
+            lines.iter().map(|l| l.trim()).collect::<Vec<_>>().join("")
+        );
+        quote! { #[doc = #d] }
     }
 }
 

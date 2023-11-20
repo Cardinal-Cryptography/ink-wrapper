@@ -47,8 +47,6 @@ fn main() -> Result<()> {
 
     let tokens: proc_macro2::TokenStream = generate(&metadata, code_hash, args.wasm_path);
 
-    println!("{}", tokens.to_string());
-
     let stdout = std::io::stdout();
 
     stdout.lock().write_all(tokens.to_string().as_bytes())?;
