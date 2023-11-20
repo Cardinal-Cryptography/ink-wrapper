@@ -22,48 +22,15 @@ pub fn generate(
 
     let code_hash = hex_to_bytes(&code_hash);
 
-    let upload = if let Some(wasm_path) = wasm_path {
-        define_upload(&wasm_path)
-    } else {
-        quote! {}
-    };
+    let upload = define_upload(wasm_path);
 
-    let custom_types: Vec<_> = metadata
-        .registry()
-        .types
-        .iter()
-        .filter(|typ| typ.ty.is_custom())
-        .map(|typ| define_type(&typ.ty, metadata))
-        .collect();
+    let custom_types = define_custom_types(metadata);
 
-    let events = metadata
-        .spec()
-        .events()
-        .iter()
-        .map(|event| define_event(event, metadata));
+    let events = define_events(metadata);
 
-    let traits = trait_messages
-        .iter()
-        .map(|(trait_name, messages)| define_trait(trait_name, messages, metadata));
+    let traits = define_traits(metadata, trait_messages);
 
-    let impl_instance = {
-        let constructors = metadata
-            .spec()
-            .constructors()
-            .iter()
-            .map(|constructor| define_constructor(constructor, metadata));
-        let messages = top_level_messages
-            .iter()
-            .map(|message| define_message(message, "pub", metadata));
-
-        quote! {
-            impl Instance {
-                #(#constructors)*
-
-                #(#messages)*
-            }
-        }
-    };
+    let impl_instance = define_impl_instance(metadata, top_level_messages);
 
     quote! {
         // This file was auto-generated with ink-wrapper (https://crates.io/crates/ink-wrapper).")
@@ -113,25 +80,84 @@ pub fn generate(
     }
 }
 
-fn define_upload(wasm_path: &str) -> proc_macro2::TokenStream {
+fn define_custom_types(
+    metadata: &InkProject,
+) -> impl Iterator<Item = proc_macro2::TokenStream> + '_ {
+    metadata
+        .registry()
+        .types
+        .iter()
+        .filter(|typ| typ.ty.is_custom())
+        .map(|typ| define_type(&typ.ty, metadata))
+}
+
+fn define_events(metadata: &InkProject) -> impl Iterator<Item = proc_macro2::TokenStream> + '_ {
+    metadata
+        .spec()
+        .events()
+        .iter()
+        .map(|event| define_event(event, metadata))
+}
+
+fn define_traits(
+    metadata: &InkProject,
+    trait_messages: HashMap<String, MessageList>,
+) -> Vec<proc_macro2::TokenStream> {
+    trait_messages
+        .iter()
+        .map(|(trait_name, messages)| define_trait(trait_name, messages, metadata))
+        .collect()
+}
+
+fn define_impl_instance(
+    metadata: &InkProject,
+    top_level_messages: Vec<&MessageSpec<PortableForm>>,
+) -> proc_macro2::TokenStream {
+    let constructors = metadata
+        .spec()
+        .constructors()
+        .iter()
+        .map(|constructor| define_constructor(constructor, metadata));
+    let messages = top_level_messages
+        .iter()
+        .map(|message| define_message(message, "pub", metadata));
+
     quote! {
-        #[allow(dead_code)]
-        pub fn upload() -> ink_wrapper_types::UploadCall
-        {
-            let wasm = include_bytes!(#wasm_path);
-            ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH)
+        impl Instance {
+            #(#constructors)*
+
+            #(#messages)*
         }
+    }
+}
+
+// If wasm_path is defined, returns a function that uploads the contract to the chain.
+// If `None`, returns empty `quote!{}` - a noop.
+fn define_upload(wasm_path: Option<String>) -> proc_macro2::TokenStream {
+    match wasm_path {
+        Some(wasm_path) => quote! {
+            #[allow(dead_code)]
+            pub fn upload() -> ink_wrapper_types::UploadCall
+            {
+                let wasm = include_bytes!(#wasm_path);
+                ink_wrapper_types::UploadCall::new(wasm.to_vec(), CODE_HASH)
+            }
+        },
+        None => quote! {},
     }
 }
 
 /// Define a group of messages with a common prefix (e.g. `PSP22::`).
 ///
 /// These messages will be grouped into a trait and implemented for the contract to avoid name clashes.
-fn define_trait(
+fn define_trait<'a, 'b>(
     trait_name: &str,
-    messages: &[&MessageSpec<PortableForm>],
-    metadata: &InkProject,
-) -> proc_macro2::TokenStream {
+    messages: &[&'b MessageSpec<PortableForm>],
+    metadata: &'a InkProject,
+) -> proc_macro2::TokenStream
+where
+    'a: 'b,
+{
     let trait_name = format_ident!("{}", trait_name);
     let trait_messages = messages
         .iter()
@@ -298,7 +324,7 @@ fn define_constructor(
     metadata: &InkProject,
 ) -> proc_macro2::TokenStream {
     let data_ident = &new_name("data", constructor.args());
-    let docs = docs(constructor.docs());
+    let docs = quote_docs(constructor.docs());
     let label = format_ident!("{}", constructor.label());
     let args = message_args(constructor.args(), metadata);
     let ret_res = if *constructor.payable() {
@@ -348,7 +374,7 @@ fn define_reader(
     metadata: &InkProject,
 ) -> proc_macro2::TokenStream {
     let data_ident = &new_name("data", message.args());
-    let docs = docs(message.docs());
+    let docs = quote_docs(message.docs());
     let reader_head = define_reader_head(message, visibility, metadata);
     let args = gather_args(message.selector().to_bytes(), message.args());
 
@@ -363,6 +389,15 @@ fn define_reader(
     }
 }
 
+fn quote_visibility(visibility: &str) -> proc_macro2::TokenStream {
+    if visibility.is_empty() {
+        quote! {}
+    } else {
+        let v = format_ident!("{}", visibility);
+        quote! { #v }
+    }
+}
+
 fn define_reader_head(
     message: &MessageSpec<PortableForm>,
     visibility: &str,
@@ -371,12 +406,7 @@ fn define_reader_head(
     let method_name = format_ident!("{}", message.method_name());
     let args = message_args(message.args(), metadata);
     let read_call_type = type_ref(message.return_type().opt_type().unwrap().ty().id, metadata);
-    let visibility = if visibility.is_empty() {
-        quote! {}
-    } else {
-        let v = format_ident!("{}", visibility);
-        quote! { #v }
-    };
+    let visibility = quote_visibility(visibility);
     quote! {
         #visibility fn #method_name(&self, #args) ->
             ink_wrapper_types::ReadCall<#read_call_type>
@@ -391,7 +421,7 @@ fn define_mutator(
 ) -> proc_macro2::TokenStream {
     let data_ident = &new_name("data", message.args());
     let data = gather_args(message.selector().to_bytes(), message.args());
-    let docs = docs(message.docs());
+    let docs = quote_docs(message.docs());
     let mutator_head = define_mutator_head(message, visibility, metadata);
     let res = if message.payable() {
         quote! {
@@ -425,12 +455,7 @@ fn define_mutator_head(
     } else {
         quote! { ink_wrapper_types::ExecCall }
     };
-    let visibility = if visibility.is_empty() {
-        quote! {}
-    } else {
-        let v = format_ident!("{}", visibility);
-        quote! { #v }
-    };
+    let visibility = quote_visibility(visibility);
     quote! {
         #visibility fn #method (&self, #message_args) -> #ret_type
     }
@@ -483,10 +508,10 @@ fn define_event(
     event: &EventSpec<PortableForm>,
     metadata: &InkProject,
 ) -> proc_macro2::TokenStream {
-    let event_docs = docs(event.docs());
+    let event_docs = quote_docs(event.docs());
     let event_label = format_ident!("{}", event.label());
     let event_fields = event.args().iter().map(|field| {
-        let field_docs = docs(field.docs());
+        let field_docs = quote_docs(field.docs());
         let field_label = format_ident!("{}", field.label());
         let field_type = type_ref_prefix(field.ty().ty().id, metadata, "super");
         quote! {
@@ -630,7 +655,7 @@ fn type_ref_compact(
     }
 }
 
-fn docs(lines: &[String]) -> proc_macro2::TokenStream {
+fn quote_docs(lines: &[String]) -> proc_macro2::TokenStream {
     if lines.is_empty() {
         quote! {}
     } else {
