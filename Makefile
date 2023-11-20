@@ -24,7 +24,7 @@ test_contract:
 
 .PHONY: upload-test-contract
 upload-test-contract: test_contract
-	cd test-project/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
+	cd test-project/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x || true
 
 .PHONY: psp22_contract
 psp22_contract:
@@ -32,7 +32,7 @@ psp22_contract:
 
 .PHONY: upload-psp22-contract
 upload-psp22-contract: psp22_contract
-	cd test-project/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 || true
+	cd test-project/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x  || true
 
 .PHONY: test_contract.rs
 test_contract.rs: test_contract
@@ -54,7 +54,7 @@ upload-contracts: upload-test-contract upload-psp22-contract # Upload test contr
 
 .PHONY: test
 test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
-	cd test-project && cargo test
+	cd test-project && cargo test --features aleph_client
 
 .PHONY: check-ink-wrapper
 check-ink-wrapper:
@@ -72,7 +72,7 @@ check-test-project: generate-wrappers
 	cd test-project && cargo clippy --all-features -- --no-deps -D warnings
 
 .PHONY: all-dockerized
-all-dockerized: run-node build-builder # Run all checks in a dockerized environment.
+all-dockerized: kill run-node build-builder # Run all checks in a dockerized environment.
 	docker run --rm --network host \
 		--user "$(shell id -u):$(shell id -g)" \
 		--volume "$(shell pwd)":/code \

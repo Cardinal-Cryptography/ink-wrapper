@@ -1,12 +1,11 @@
 mod codegen;
 mod extensions;
 
-use std::fs;
+use std::{fs, io::Write};
 
 use anyhow::Result;
 use clap::Parser;
 use codegen::generate;
-use genco::{fmt, prelude::*};
 use ink_metadata::InkProject;
 use serde::{Deserialize, Serialize};
 
@@ -46,15 +45,11 @@ fn main() -> Result<()> {
     let code_hash = metadata.source.hash;
     let metadata: InkProject = serde_json::from_str(&jsonized)?;
 
-    let tokens: rust::Tokens = generate(&metadata, code_hash, args.wasm_path);
+    let tokens: proc_macro2::TokenStream = generate(&metadata, code_hash, args.wasm_path);
 
     let stdout = std::io::stdout();
-    let mut w = fmt::IoWriter::new(stdout.lock());
 
-    let fmt = fmt::Config::from_lang::<Rust>().with_indentation(fmt::Indentation::Space(4));
+    stdout.lock().write_all(tokens.to_string().as_bytes())?;
 
-    let config = rust::Config::default().with_default_import(rust::ImportMode::Qualified);
-
-    tokens.format_file(&mut w.as_formatter(&fmt), &config)?;
     Ok(())
 }
