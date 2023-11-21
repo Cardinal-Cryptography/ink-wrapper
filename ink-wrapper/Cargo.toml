@@ -1,15 +1,16 @@
 [package]
 name = "ink-wrapper"
 version = "0.6.1"
+description = "Tool for generating type-safe code for calling an ink smart contract based on the metadata file for that contract."
+categories = ["development-tools::build-utils"]
+authors = ["Cardinal"]
 edition = "2021"
 license = "Apache-2.0"
 readme = "../README.md"
-description = "Tool for generating type-safe code for calling an ink smart contract based on the metadata file for that contract."
 repository = "https://github.com/Cardinal-Cryptography/ink-wrapper.git"
 homepage = "https://github.com/Cardinal-Cryptography/ink-wrapper"
-documentation = "https://docs.rs/ink-wrapper"
+documentation = "https://docs.rs/ink-wrapper-types"
 keywords = ["ink", "wasm", "blockchain", "contract", "client"]
-categories = ["development-tools::build-utils"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

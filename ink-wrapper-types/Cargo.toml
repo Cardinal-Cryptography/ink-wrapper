@@ -1,17 +1,16 @@
 [package]
 name = "ink-wrapper-types"
 version = "0.6.0"
+description = "Helper library for contract client code generated with ink-wrapper."
+categories = []
+authors = ["Cardinal"]
 edition = "2021"
 license = "Apache-2.0"
 readme = "../README.md"
-description = "Helper library for contract client code generated with ink-wrapper."
 repository = "https://github.com/Cardinal-Cryptography/ink-wrapper.git"
 homepage = "https://github.com/Cardinal-Cryptography/ink-wrapper"
 documentation = "https://docs.rs/ink-wrapper-types"
 keywords = ["ink", "wasm", "blockchain", "contract", "client"]
-categories = []
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node", package = "aleph_client", tag = "r-12.1", optional = true }
