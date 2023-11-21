@@ -1,0 +1,28 @@
+[package]
+name = "ink-wrapper-drink"
+version = "0.6.0"
+description = "Helper library for contract client code generated with ink-wrapper."
+categories = []
+authors = ["Cardinal"]
+edition = "2021"
+license = "Apache-2.0"
+readme = "../README.md"
+repository = "https://github.com/Cardinal-Cryptography/ink-wrapper.git"
+homepage = "https://github.com/Cardinal-Cryptography/ink-wrapper"
+documentation = "https://docs.rs/ink-wrapper-types"
+keywords = ["ink", "wasm", "blockchain", "contract", "client"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+drink = "0.8.0"
+ink_primitives = "4.3"
+
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [
+    "derive",
+] }
+scale-info = { version = "2.6", default-features = false, features = [
+    "derive",
+], optional = true }
+
+anyhow = { version = "1.0.51", optional = true }

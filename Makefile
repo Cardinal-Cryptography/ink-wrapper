@@ -66,6 +66,12 @@ check-ink-wrapper-types:
 	cd ink-wrapper-types && cargo fmt --all --check
 	cd ink-wrapper-types && cargo clippy --all-features -- --no-deps -D warnings
 
+.PHONY: check-ink-wrapper-drink
+check-ink-wrapper-drink:
+	cd ink-wrapper-drink && cargo fmt --all --check
+	cd ink-wrapper-drink && cargo clippy --all-features -- --no-deps -D warnings
+
+
 .PHONY: check-test-project
 check-test-project: generate-wrappers
 	cd test-project && cargo fmt --all --check
@@ -82,7 +88,7 @@ all-dockerized: kill run-node build-builder # Run all checks in a dockerized env
 		make all
 
 .PHONY: all
-all: check-ink-wrapper check-ink-wrapper-types check-test-project test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
+all: check-ink-wrapper check-ink-wrapper-types check-ink-wrapper-drink check-test-project test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
 
 .PHONY: kill
 kill: # Remove dangling containers after a dockerized test run.
