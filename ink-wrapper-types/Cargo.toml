@@ -31,7 +31,7 @@ pallet-contracts-primitives = { git = "https://github.com/Cardinal-Cryptography/
 ink_metadata_aleph_client = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.0.1", optional = true }
 
 # drink specific integration.
-drink = { version = "0.8.0", optional = true }
+drink = { version = "0.8.2", optional = true }
 ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }
 frame-system = { version = "23.0.0", optional = true }
 
