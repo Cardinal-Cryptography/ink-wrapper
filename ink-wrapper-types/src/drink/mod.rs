@@ -1,28 +1,51 @@
 mod client;
 
-use ::drink::{
-    runtime::{HashFor, RuntimeWithContracts},
-    session::{Session, SessionError},
-};
+use ::drink::{errors::MessageResult, runtime::HashFor, session::error::SessionError, Weight};
 pub use client::*;
 
-use crate::{ExecCall, InstantiateCall, ReadCall, UploadCall};
+use crate::{ContractEvent, InstantiateCall, ReadCall, UploadCall};
 
 pub enum Error {
-    SessionError(SessionError),
+    DrinkError(SessionError),
+    DecodingError(String),
+    CodeHashMismatch,
 }
 
-pub trait Connection {
-    fn upload<R: frame_system::Config>(&self, call: UploadCall) -> Result<HashFor<R>, Error>;
+impl From<SessionError> for Error {
+    fn from(e: SessionError) -> Self {
+        Self::DrinkError(e)
+    }
+}
+
+pub trait Connection<R: frame_system::Config> {
+    fn upload_code(&mut self, call: UploadCall) -> Result<HashFor<R>, Error>;
 
     fn instantiate<T: Send>(
-        &self,
+        &mut self,
         call: InstantiateCall<T>,
-    ) -> Result<ink_primitives::AccountId, Error>;
+    ) -> Result<ContractInstantiateResult<R::AccountId>, Error>;
 
-    fn exec(&self, call: ExecCall) -> Result<ContractExecResult, Error>;
+    fn exec<T: scale::Decode + Send>(
+        &mut self,
+        call: ReadCall<T>,
+    ) -> Result<ContractExecResult<MessageResult<T>>, Error>;
 
-    fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T, Error>;
+    // like `exec`, but does not commit changes
+    fn read<T: scale::Decode + Send>(
+        &mut self,
+        call: ReadCall<T>,
+    ) -> Result<ContractReadResult<MessageResult<T>>, Error>;
 }
 
-impl<R: RuntimeWithContracts> Connection for Session<R> {}
+pub struct ContractResult<R> {
+    pub gas_consumed: Weight,
+    pub gas_required: Weight,
+    pub result: R,
+    pub events: Vec<ContractEvent>,
+}
+
+pub type ContractInstantiateResult<AccountId> = ContractResult<AccountId>;
+
+pub type ContractExecResult<R> = ContractResult<R>;
+
+pub type ContractReadResult<R> = ContractResult<R>;
