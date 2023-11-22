@@ -1,6 +1,8 @@
 #[cfg(feature = "aleph_client")]
 mod aleph_client;
 mod calls;
+#[cfg(feature = "drink")]
+mod drink;
 
 pub mod util;
 
@@ -9,6 +11,8 @@ use ink_primitives::AccountId;
 
 #[cfg(feature = "aleph_client")]
 pub use crate::aleph_client::*;
+#[cfg(feature = "drink")]
+pub use crate::drink::*;
 /// Represents a raw event emitted by a contract.
 pub struct ContractEvent {
     /// The account id of the contract that emitted the event.

@@ -33,6 +33,7 @@ ink_metadata_aleph_client = { git = "https://github.com/paritytech/ink", package
 # drink specific integration.
 drink = { version = "0.8.0", optional = true }
 ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }
+frame-system = { version = "23.0.0", optional = true }
 
 [features]
 aleph_client = [
@@ -42,7 +43,7 @@ aleph_client = [
     "dep:pallet-contracts-primitives",
     "dep:ink_metadata_aleph_client",
 ]
-drink = ["dep:drink", "dep:ink_metadata_drink"]
+drink = ["dep:drink", "dep:ink_metadata_drink", "dep:frame-system"]
 
 [patch.crates-io]
 ink_metadata_aleph_client = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.0.1", optional = true }
