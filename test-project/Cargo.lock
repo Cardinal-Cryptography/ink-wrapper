@@ -114,7 +114,7 @@ dependencies = [
  "contract-transcode",
  "futures",
  "hex",
- "ink_metadata",
+ "ink_metadata 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "pallet-contracts-primitives",
  "parity-scale-codec",
@@ -760,7 +760,7 @@ dependencies = [
  "hex",
  "indexmap",
  "ink_env",
- "ink_metadata",
+ "ink_metadata 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools",
  "nom",
  "nom-supreme",
@@ -1875,7 +1875,8 @@ dependencies = [
  "aleph_client",
  "anyhow",
  "async-trait",
- "ink_primitives",
+ "ink_metadata 4.0.1 (git+https://github.com/paritytech/ink?rev=v4.0.1)",
+ "ink_primitives 4.3.0",
  "pallet-contracts-primitives",
  "parity-scale-codec",
  "subxt",
@@ -1898,7 +1899,7 @@ checksum = "722ec3a5eb557124b001c60ff8f961079f6d566af643edea579f152b15822fe5"
 dependencies = [
  "blake2",
  "derive_more",
- "ink_primitives",
+ "ink_primitives 4.3.0",
  "parity-scale-codec",
  "secp256k1 0.27.0",
  "sha2 0.10.8",
@@ -1917,9 +1918,9 @@ dependencies = [
  "derive_more",
  "ink_allocator",
  "ink_engine",
- "ink_metadata",
- "ink_prelude",
- "ink_primitives",
+ "ink_metadata 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ink_prelude 4.3.0",
+ "ink_primitives 4.3.0",
  "ink_storage_traits",
  "num-traits",
  "parity-scale-codec",
@@ -1940,10 +1941,31 @@ checksum = "5dfcfa666ada5729c7e4d3d986cd196365a2c469459fced4fa31dc6ad87c4d8f"
 dependencies = [
  "derive_more",
  "impl-serde",
- "ink_prelude",
- "ink_primitives",
+ "ink_prelude 4.3.0",
+ "ink_primitives 4.3.0",
  "scale-info",
  "serde",
+]
+
+[[package]]
+name = "ink_metadata"
+version = "4.0.1"
+source = "git+https://github.com/paritytech/ink?rev=v4.0.1#0af00f700a11b44c2fa1fc9515ae25ca28321659"
+dependencies = [
+ "derive_more",
+ "impl-serde",
+ "ink_prelude 4.0.1",
+ "ink_primitives 4.0.1",
+ "scale-info",
+ "serde",
+]
+
+[[package]]
+name = "ink_prelude"
+version = "4.0.1"
+source = "git+https://github.com/paritytech/ink?rev=v4.0.1#0af00f700a11b44c2fa1fc9515ae25ca28321659"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -1957,12 +1979,24 @@ dependencies = [
 
 [[package]]
 name = "ink_primitives"
+version = "4.0.1"
+source = "git+https://github.com/paritytech/ink?rev=v4.0.1#0af00f700a11b44c2fa1fc9515ae25ca28321659"
+dependencies = [
+ "derive_more",
+ "ink_prelude 4.0.1",
+ "parity-scale-codec",
+ "scale-info",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "ink_primitives"
 version = "4.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6414bcad12ebf0c3abbbb192a09e4d06e22f662cf3e19545204e1b0684be12a1"
 dependencies = [
  "derive_more",
- "ink_prelude",
+ "ink_prelude 4.3.0",
  "parity-scale-codec",
  "scale-decode 0.9.0",
  "scale-encode 0.5.0",
@@ -1976,9 +2010,9 @@ version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c90e11b60233ae5ab877854739da2c380a337cb31b3900cb50328821c0381b6"
 dependencies = [
- "ink_metadata",
- "ink_prelude",
- "ink_primitives",
+ "ink_metadata 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ink_prelude 4.3.0",
+ "ink_primitives 4.3.0",
  "parity-scale-codec",
  "scale-info",
  "syn 1.0.107",
@@ -4894,7 +4928,7 @@ dependencies = [
  "assert2",
  "async-trait",
  "ink-wrapper-types",
- "ink_primitives",
+ "ink_primitives 4.3.0",
  "once_cell",
  "parity-scale-codec",
  "rand 0.8.5",

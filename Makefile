@@ -64,7 +64,8 @@ check-ink-wrapper:
 .PHONY: check-ink-wrapper-types
 check-ink-wrapper-types:
 	cd ink-wrapper-types && cargo fmt --all --check
-	cd ink-wrapper-types && cargo clippy --all-features -- --no-deps -D warnings
+	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
+	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
 
 .PHONY: check-ink-wrapper-drink
 check-ink-wrapper-drink:
