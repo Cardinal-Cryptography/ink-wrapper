@@ -55,6 +55,7 @@ upload-contracts: upload-test-contract upload-psp22-contract # Upload test contr
 .PHONY: test
 test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
 	cd test-project && cargo test --features aleph_client
+	cd test-project && cargo test --features drink
 
 .PHONY: check-ink-wrapper
 check-ink-wrapper:
@@ -64,13 +65,14 @@ check-ink-wrapper:
 .PHONY: check-ink-wrapper-types
 check-ink-wrapper-types:
 	cd ink-wrapper-types && cargo fmt --all --check
-	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
+	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
 .PHONY: check-test-project
 check-test-project: generate-wrappers
 	cd test-project && cargo fmt --all --check
-	cd test-project && cargo clippy --all-features -- --no-deps -D warnings
+	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
+	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
 .PHONY: all-dockerized
 all-dockerized: kill run-node build-builder # Run all checks in a dockerized environment.
