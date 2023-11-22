@@ -1,4 +1,4 @@
-use aleph_client::{
+use ::aleph_client::{
     api::contracts::events::ContractEmitted,
     pallet_contracts::wasm::Determinism,
     pallets::contract::{ContractCallArgs, ContractRpc, ContractsUserApi, EventRecord},
@@ -16,6 +16,7 @@ use pallet_contracts_primitives::{
 use scale::Encode;
 use subxt::{ext::sp_core::Bytes, rpc_params};
 
+use super::*;
 use crate::{ExecCall, InstantiateCall, ReadCall, UploadCall};
 
 /// This matches the expected API of an instantiate request in the pallet_contracts, do not change unless that changes.
@@ -59,7 +60,7 @@ impl From<crate::TxStatus> for TxStatus {
 }
 
 #[async_trait]
-impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Error> for C {
+impl<C: AsConnection + Send + Sync> Connection<TxInfo, Error> for C {
     async fn read<T: scale::Decode + Send>(&self, call: ReadCall<T>) -> Result<T> {
         let result = dry_run(
             self.as_connection(),
@@ -96,7 +97,7 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 }
 
 #[async_trait]
-impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
+impl UploadConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnection {
     async fn upload(&self, call: UploadCall, tx_status: crate::TxStatus) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
         let determinism = Determinism::Enforced;
@@ -133,7 +134,7 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 }
 
 #[async_trait]
-impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
+impl SignedConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnection {
     async fn instantiate_tx<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
@@ -205,7 +206,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
 }
 
 async fn dry_run<A1: AsRef<[u8; 32]>, A2: AsRef<[u8; 32]>>(
-    conn: &aleph_client::Connection,
+    conn: &::aleph_client::Connection,
     contract: A1,
     call_as: A2,
     value: Balance,
