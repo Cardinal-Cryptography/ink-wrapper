@@ -403,13 +403,17 @@ fn define_reader_head(
     visibility: &str,
     metadata: &InkProject,
 ) -> proc_macro2::TokenStream {
-    let method_name = format_ident!("{}", message.method_name());
+    let method = format_ident!("{}", message.method_name());
     let args = message_args(message.args(), metadata);
     let read_call_type = type_ref(message.return_type().opt_type().unwrap().ty().id, metadata);
+    let ret_type = if message.payable() {
+        quote! { ink_wrapper_types::ReadCallNeedsValue<#read_call_type> }
+    } else {
+        quote! { ink_wrapper_types::ReadCall<#read_call_type> }
+    };
     let visibility = quote_visibility(visibility);
     quote! {
-        #visibility fn #method_name(&self, #args) ->
-            ink_wrapper_types::ReadCall<#read_call_type>
+        #visibility fn #method (&self, #args) -> #ret_type
     }
 }
 

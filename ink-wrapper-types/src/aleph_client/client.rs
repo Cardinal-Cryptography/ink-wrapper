@@ -66,7 +66,7 @@ impl<C: AsConnection + Send + Sync> Connection<TxInfo, Error> for C {
             self.as_connection(),
             call.account_id,
             call.account_id,
-            0,
+            call.value,
             call.data,
         )
         .await?

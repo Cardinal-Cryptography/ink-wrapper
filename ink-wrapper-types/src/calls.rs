@@ -127,6 +127,17 @@ pub struct ReadCall<T: scale::Decode + Send> {
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
+    /// The value to be sent with the call.
+    pub value: u128,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
+}
+
+pub struct ReadCallNeedsValue<T: scale::Decode + Send> {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
     /// A marker for the type to decode the result into.
     _return_type: PhantomData<T>,
 }
@@ -137,7 +148,27 @@ impl<T: scale::Decode + Send> ReadCall<T> {
         Self {
             account_id,
             data,
+            value: 0,
             _return_type: Default::default(),
+        }
+    }
+}
+
+impl<T: scale::Decode + Send> ReadCallNeedsValue<T> {
+    /// Create a new needs value call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self {
+            account_id,
+            data,
+            _return_type: Default::default(),
+        }
+    }
+
+    /// Set the value to be sent with the call.
+    pub fn with_value(self, value: u128) -> ReadCall<T> {
+        ReadCall {
+            value,
+            ..ReadCall::new(self.account_id, self.data)
         }
     }
 }

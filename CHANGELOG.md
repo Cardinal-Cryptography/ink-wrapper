@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- `ReadCall` gets new argument `value: u128` representing native tokens transferred. 
+
 ## 0.6.1
 
 ### Changed
