@@ -97,7 +97,7 @@ impl<C: aleph_client::AsConnection + Send + Sync> crate::Connection<TxInfo, Erro
 
 #[async_trait]
 impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConnection {
-    async fn upload(&self, call: UploadCall) -> Result<TxInfo> {
+    async fn upload(&self, call: UploadCall, tx_status: crate::TxStatus) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
         let determinism = Determinism::Enforced;
 
@@ -125,12 +125,7 @@ impl crate::UploadConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
         }
 
         let tx_info = self
-            .upload_code(
-                call.wasm,
-                None,
-                Determinism::Enforced,
-                call.tx_status.into(),
-            )
+            .upload_code(call.wasm, None, Determinism::Enforced, tx_status.into())
             .await?;
 
         Ok(tx_info)
@@ -142,6 +137,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
     async fn instantiate_tx<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
+        tx_status: crate::TxStatus,
     ) -> Result<(T, TxInfo)> {
         let origin = self.account_id().clone().into();
         let value = call.value;
@@ -175,14 +171,14 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             None,
             call.data,
             call.salt,
-            call.tx_status.into(),
+            tx_status.into(),
         )
         .await?;
 
         Ok((account_id.into(), tx_info))
     }
 
-    async fn exec(&self, call: ExecCall) -> Result<TxInfo> {
+    async fn exec(&self, call: ExecCall, tx_status: crate::TxStatus) -> Result<TxInfo> {
         let result = dry_run(
             self.as_connection(),
             call.account_id,
@@ -202,7 +198,7 @@ impl crate::SignedConnection<TxInfo, anyhow::Error> for aleph_client::SignedConn
             },
             None,
             call.data,
-            call.tx_status.into(),
+            tx_status.into(),
         )
         .await
     }
