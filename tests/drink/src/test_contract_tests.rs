@@ -1,250 +1,253 @@
-// use anyhow::Result;
-// use assert2::assert;
-// use ink_primitives::AccountId;
-// use ink_wrapper_types::Connection;
-// use rand::RngCore as _;
+use anyhow::Result;
+use assert2::assert;
+use drink::{runtime::MinimalRuntime, session::Session};
+use ink_primitives::AccountId;
+use ink_wrapper_types::{util::ToAccountId, Connection, ContractEvents};
 
-// use crate::test_contract::{Enum1, Struct1, Struct2};
+use crate::{
+    test_contract::{self, Enum1, Instance, Struct1, Struct2},
+    *,
+};
 
-// fn random_salt() -> Vec<u8> {
-//     let mut salt = vec![0; 32];
-//     rand::thread_rng().fill_bytes(&mut salt);
-//     salt
-// }
+fn setup(session: &mut Session<MinimalRuntime>, caller: drink::AccountId32) -> Instance {
+    let _code_hash = session.upload_code(test_contract::upload()).unwrap();
 
-// fn test_simple_integer_messages() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    let _ = session.set_actor(caller);
 
-//     let old_val = conn.read(contract.get_u32()).await??;
-//     let new_val = old_val + 42;
-//     conn.exec(contract.set_u32(new_val), TxStatus::Finalized)
-//         .await?;
+    session
+        .instantiate(Instance::default())
+        .unwrap()
+        .result
+        .to_account_id()
+        .into()
+}
 
-//     assert!(conn.read(contract.get_u32()).await?? == new_val);
+#[test]
+fn test_simple_integer_messages() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let old_val = session.query(instance.get_u32()).unwrap().result.unwrap();
+    let new_val = old_val + 42;
+    let _res = session
+        .execute(instance.set_u32(new_val))
+        .unwrap()
+        .result
+        .unwrap();
 
-// fn test_struct_messages() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    let updated_val = session.query(instance.get_u32()).unwrap().result.unwrap();
+    assert!(updated_val == updated_val);
 
-//     let val = Struct2(
-//         Struct1 {
-//             a: 1,
-//             b: 2,
-//             c: [2, 3, 4, 5],
-//         },
-//         Enum1::B(3),
-//     );
-//     conn.exec(contract.set_struct2(val.clone()), TxStatus::Finalized)
-//         .await?;
-//     assert!(conn.read(contract.get_struct2()).await?? == val);
+    Ok(())
+}
 
-//     Ok(())
-// }
+#[test]
+fn test_struct_messages() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-// fn test_array_messages() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    let val = Struct2(
+        Struct1 {
+            a: 1,
+            b: 2,
+            c: [2, 3, 4, 5],
+        },
+        Enum1::B(3),
+    );
+    let _r = session.execute(instance.set_struct2(val.clone())).unwrap();
+    let get = session
+        .query(instance.get_struct2())
+        .unwrap()
+        .result
+        .unwrap();
+    assert!(get == val);
+    Ok(())
+}
 
-//     conn.exec(contract.set_array([1, 2, 3]), TxStatus::Finalized)
-//         .await?;
-//     conn.exec(contract.set_enum1(Enum1::A()), TxStatus::Finalized)
-//         .await?;
-//     assert!(conn.read(contract.get_array()).await?? == [(1, Enum1::A()), (1, Enum1::A())]);
+#[test]
+fn test_array_messages() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let _r = session.execute(instance.set_array([1, 2, 3])).unwrap();
+    let _r = session.execute(instance.set_enum1(Enum1::A())).unwrap();
 
-// fn test_sequence_messages() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    let got = session.query(instance.get_array()).unwrap().result.unwrap();
+    assert!(got == [(1, Enum1::A()), (1, Enum1::A())]);
+    Ok(())
+}
 
-//     conn.exec(contract.set_sequence(vec![5, 2, 3]), TxStatus::Finalized)
-//         .await?;
-//     conn.exec(contract.set_enum1(Enum1::A()), TxStatus::Finalized)
-//         .await?;
-//     assert!(conn.read(contract.get_array()).await?? == [(5, Enum1::A()), (5, Enum1::A())]);
+#[test]
+fn test_sequence_messages() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let _r = session
+        .execute(instance.set_sequence(vec![5, 2, 3]))
+        .unwrap();
+    let _r = session.execute(instance.set_enum1(Enum1::A())).unwrap();
+    let got = session.query(instance.get_array()).unwrap().result.unwrap();
+    assert!(got == [(5, Enum1::A()), (5, Enum1::A())]);
 
-// fn test_compact_messages() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    Ok(())
+}
 
-//     conn.exec(
-//         contract.set_compact(scale::Compact(42)),
-//         TxStatus::Finalized,
-//     )
-//     .await?;
-//     assert!(conn.read(contract.get_compact()).await?? == scale::Compact(42));
+#[test]
+fn test_compact_messages() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let _r = session
+        .execute(instance.set_compact(scale::Compact(42)))
+        .unwrap();
+    let got = session
+        .query(instance.get_compact())
+        .unwrap()
+        .result
+        .unwrap();
+    assert!(got == scale::Compact(42));
 
-// fn test_messages_with_clashing_argument_names() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    Ok(())
+}
 
-//     conn.exec(
-//         contract.set_forbidden_names(1, 2, 3, 4, 5),
-//         TxStatus::Finalized,
-//     )
-//     .await?;
-//     assert!(conn.read(contract.get_u32()).await?? == 1 + 2 + 3 + 4 + 5);
-//     assert!(
-//         conn.read(contract.get_forbidden_names(1, 2, 3, 4, 5))
-//             .await??
-//             == 1 + 2 + 3 + 4 + 5
-//     );
+#[test]
+fn test_messages_with_clashing_argument_names() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let _r = session
+        .execute(instance.set_forbidden_names(1, 2, 3, 4, 5))
+        .unwrap();
 
-// fn test_conversion_to_account_id() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
-//     conn.exec(contract.set_u32(12345), TxStatus::Finalized)
-//         .await?;
+    let read = session.query(instance.get_u32()).unwrap();
+    assert!(read.result.unwrap() == 1 + 2 + 3 + 4 + 5);
 
-//     let account_id: AccountId = contract.into();
-//     let contract: test_contract::Instance = account_id.into();
+    Ok(())
+}
 
-//     assert!(conn.read(contract.get_u32()).await?? == 12345);
+#[test]
+fn test_conversion_to_account_id() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let _r = session.execute(instance.set_u32(12345)).unwrap();
 
-// fn test_events() -> Result<()> {
-//     use test_contract::event::Event;
+    let account_id: AccountId = instance.into();
+    let instance: Instance = account_id.into();
 
-//     let (conn, contract) = connect_and_deploy().await?;
+    assert!(session.query(instance.get_u32()).unwrap().result.unwrap() == 12345);
 
-//     let struct2 = Struct2(
-//         Struct1 {
-//             a: 1,
-//             b: 2,
-//             c: [0; 4],
-//         },
-//         Enum1::B(3),
-//     );
-//     conn.exec(contract.set_u32(123), TxStatus::Finalized)
-//         .await?;
-//     conn.exec(contract.set_struct2(struct2.clone()), TxStatus::Finalized)
-//         .await?;
-//     let struct1 = conn.read(contract.get_struct1()).await??;
-//     let tx_info = conn
-//         .exec(contract.generate_events(), TxStatus::Finalized)
-//         .await?;
-//     let events = conn.get_contract_events(tx_info).await?;
-//     let events = events.for_contract(contract);
+    Ok(())
+}
 
-//     assert!(
-//         events[0]
-//             == Ok(Event::Event1 {
-//                 a: 123,
-//                 b: struct2.clone(),
-//                 c: struct1.c,
-//                 d: (struct1.clone(), struct2),
-//                 e: Some(struct1),
-//             })
-//     );
-//     assert!(events[1] == Ok(Event::Event2 {}));
+#[test]
+fn test_events() -> Result<()> {
+    use test_contract::event::Event;
 
-//     Ok(())
-// }
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-// fn test_ink_lang_error() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    let struct2 = Struct2(
+        Struct1 {
+            a: 1,
+            b: 2,
+            c: [0; 4],
+        },
+        Enum1::B(3),
+    );
 
-//     assert!(
-//         conn.read(contract.generate_ink_lang_error())
-//             .await??
-//             .to_string()
-//             == "InkLangError(CouldNotReadInput)"
-//     );
+    let _r = session
+        .execute(instance.set_u32(123))
+        .unwrap()
+        .result
+        .unwrap();
 
-//     Ok(())
-// }
+    let _r = session
+        .execute(instance.set_struct2(struct2.clone()))
+        .unwrap()
+        .result
+        .unwrap();
 
-// fn test_upload() -> Result<()> {
-//     let conn = connect_as_test_account().await?;
+    let struct1 = session
+        .query(instance.get_struct1())
+        .unwrap()
+        .result
+        .unwrap();
 
-//     assert!(conn
-//         .upload(test_contract::upload(), TxStatus::Finalized)
-//         .await
-//         .is_ok());
+    let txn = session.execute(instance.generate_events()).unwrap();
 
-//     Ok(())
-// }
+    let events = ContractEvents::from_iter(&txn.events, instance);
 
-// fn test_receiving_value() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+    assert!(
+        events[0]
+            == Ok(Event::Event1 {
+                a: 123,
+                b: struct2.clone(),
+                c: struct1.c,
+                d: (struct1.clone(), struct2),
+                e: Some(struct1),
+            })
+    );
+    assert!(events[1] == Ok(Event::Event2 {}));
 
-//     let tx_info = conn
-//         .exec(
-//             contract.receive_value().with_value(123),
-//             TxStatus::Finalized,
-//         )
-//         .await?;
-//     let events = conn.get_contract_events(tx_info).await?;
-//     let events = events.for_contract(contract);
+    Ok(())
+}
 
-//     assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
+#[test]
+fn test_ink_lang_error() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-//     Ok(())
-// }
+    let r = session
+        .query(instance.generate_ink_lang_error())
+        .unwrap()
+        .result;
 
-// fn test_receiving_value_in_constructor() -> Result<()> {
-//     let conn = connect_as_test_account().await?;
+    assert!(r.unwrap().to_string() == "InkLangError(CouldNotReadInput)");
 
-//     let (contract, tx_info) = conn
-//         .instantiate_tx(
-//             test_contract::Instance::payable_constructor()
-//                 .with_value(123)
-//                 .with_salt(random_salt()),
-//             TxStatus::Finalized,
-//         )
-//         .await?;
-//     let events = conn.get_contract_events(tx_info).await?;
-//     let events = events.for_contract(contract);
+    Ok(())
+}
 
-//     assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
+#[test]
+fn test_upload() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let code_hash = session.upload_code(test_contract::upload()).unwrap();
+    assert!(code_hash.as_ref() == test_contract::CODE_HASH);
+    Ok(())
+}
 
-//     Ok(())
-// }
+#[test]
+fn test_receiving_value() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
 
-// fn test_constructor_waiting_for_submitted() -> Result<()> {
-//     let conn = connect_as_test_account().await?;
+    let result = session
+        .execute(instance.receive_value().with_value(123))
+        .unwrap();
 
-//     let (_contract, tx_info) = conn
-//         .instantiate_tx(
-//             test_contract::Instance::default().with_salt(random_salt()),
-//             TxStatus::Submitted,
-//         )
-//         .await?;
+    let events = ContractEvents::from_iter(&result.events, instance);
 
-//     assert!(tx_info.block_hash == [0; 32].into());
+    assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
 
-//     Ok(())
-// }
+    Ok(())
+}
 
-// fn test_exec_waiting_for_submitted() -> Result<()> {
-//     let (conn, contract) = connect_and_deploy().await?;
+#[test]
+fn test_receiving_value_in_constructor() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let _code_hash = session.upload_code(test_contract::upload()).unwrap();
 
-//     let tx_info = conn
-//         .exec(contract.set_u32(123), TxStatus::Submitted)
-//         .await?;
+    let _ = session.set_actor(BOB);
 
-//     assert!(tx_info.block_hash == [0; 32].into());
+    let txn: ink_wrapper_types::ContractInstantiateResult<drink::AccountId32> = session
+        .instantiate(Instance::payable_constructor().with_value(123))
+        .unwrap();
 
-//     Ok(())
-// }
+    let instance: Instance = txn.result.to_account_id().into();
 
-// fn test_upload_waiting_for_submitted() -> Result<()> {
-//     let conn = connect_as_test_account().await?;
+    let events = ContractEvents::from_iter(&txn.events, instance);
 
-//     let tx_info = conn
-//         .upload(test_contract::upload(), TxStatus::Submitted)
-//         .await?;
+    assert!(events[0] == Ok(test_contract::event::Event::Received { value: 123 }));
 
-//     assert!(tx_info.block_hash == [0; 32].into());
-
-//     Ok(())
-// }
+    Ok(())
+}

@@ -41,10 +41,17 @@ impl ContractEvents {
     /// decoded even though it was emitted byt the particular contract. This can happen if the metadata used to generate
     /// the contract wrapper is out of date. If you're sure that's not the case, then it might be a bug.
     pub fn for_contract<C: EventSource>(&self, contract: C) -> Vec<Result<C::Event, scale::Error>> {
+        ContractEvents::from_iter(&self.events, contract)
+    }
+
+    pub fn from_iter<'a, I: IntoIterator<Item = &'a ContractEvent>, C: EventSource>(
+        events: I,
+        contract: C,
+    ) -> Vec<Result<C::Event, scale::Error>> {
         use scale::Decode as _;
 
-        self.events
-            .iter()
+        events
+            .into_iter()
             .filter(|e| e.account_id == contract.into())
             .map(|e| C::Event::decode(&mut e.data.as_slice()))
             .collect()
