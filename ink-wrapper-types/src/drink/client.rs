@@ -2,7 +2,7 @@ use ::drink::{
     errors::MessageResult,
     pallet_contracts,
     runtime::{HashFor, MinimalRuntime},
-    session::{error::SessionError, Session},
+    session::Session,
     Weight,
 };
 use scale::Decode;
@@ -41,10 +41,8 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         );
 
         let contract_address = match &instantiate_contract_result.result {
-            Ok(exec_result) if exec_result.result.did_revert() => {
-                Err(Error::DrinkError(SessionError::DeploymentReverted))
-            }
-            Err(err) => Err(Error::DrinkError(SessionError::DeploymentFailed(*err))),
+            Ok(exec_result) if exec_result.result.did_revert() => Err(Error::DeploymentReverted),
+            Err(err) => Err(Error::DeploymentFailed(*err)),
             Ok(exec_result) => Ok(exec_result.account_id.clone()),
         }?;
 
@@ -60,11 +58,20 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
 
     fn exec<T: scale::Decode + Send>(
         &mut self,
-        call: ReadCall<T>,
+        call: ExecCall<T>,
     ) -> Result<ContractExecResult<MessageResult<T>>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
-        let result = call_contract(actor, gas_limit, self.sandbox(), call)?;
+        let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
+
+        let result = call_contract(
+            actor,
+            gas_limit,
+            self.sandbox(),
+            contract_address,
+            call.value,
+            call.data,
+        )?;
 
         Ok(result)
     }
@@ -75,9 +82,18 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     ) -> Result<ContractReadResult<MessageResult<T>>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
-        let result = self
-            .sandbox()
-            .dry_run(|sandbox| call_contract(actor, gas_limit, sandbox, call))?;
+        let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
+
+        let result = self.sandbox().dry_run(|sandbox| {
+            call_contract(
+                actor,
+                gas_limit,
+                sandbox,
+                contract_address,
+                call.value,
+                call.data,
+            )
+        })?;
 
         Ok(result)
     }
@@ -87,12 +103,14 @@ fn call_contract<T: scale::Decode + Send>(
     actor: <MinimalRuntime as frame_system::Config>::AccountId,
     gas_limit: Weight,
     sandbox: &mut drink::Sandbox<MinimalRuntime>,
-    call: ReadCall<T>,
+    address: <MinimalRuntime as frame_system::Config>::AccountId,
+    value: u128,
+    data: Vec<u8>,
 ) -> Result<ContractResult<MessageResult<T>>, Error> {
     let result = sandbox.call_contract(
-        (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into(),
-        call.value,
-        call.data,
+        address,
+        value,
+        data,
         actor,
         gas_limit,
         None,
@@ -100,11 +118,10 @@ fn call_contract<T: scale::Decode + Send>(
     );
 
     let message_result: MessageResult<T> = match &result.result {
-        Ok(exec_result) if exec_result.did_revert() => {
-            Err(Error::DrinkError(SessionError::CallReverted))
-        }
+        Ok(exec_result) if exec_result.did_revert() => Err(Error::CallReverted),
         Ok(exec_result) => {
             let encoded = exec_result.data.clone();
+            println!("encoded: {:?}", encoded);
 
             MessageResult::<T>::decode(&mut encoded.as_slice()).map_err(|err| {
                 Error::DecodingError(format!(
@@ -112,7 +129,7 @@ fn call_contract<T: scale::Decode + Send>(
                 ))
             })
         }
-        Err(err) => Err(Error::DrinkError(SessionError::CallFailed(*err))),
+        Err(err) => Err(Error::CallFailed(*err)),
     }?;
 
     let events = extract_events(&result.events);

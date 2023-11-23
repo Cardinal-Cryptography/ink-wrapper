@@ -75,22 +75,25 @@ impl<T: Send> InstantiateCallNeedsValue<T> {
 
 /// Represents a mutating contract call to be made.
 #[derive(Debug, Clone)]
-pub struct ExecCall {
+pub struct ExecCall<T: scale::Decode + Send> {
     /// The account id of the contract to call.
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
     /// The value to be sent with the call.
     pub value: u128,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
 }
 
-impl ExecCall {
+impl<T: scale::Decode + Send> ExecCall<T> {
     /// Create a new exec call.
     pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
         Self {
             account_id,
             data,
             value: 0,
+            _return_type: Default::default(),
         }
     }
 }
@@ -98,21 +101,27 @@ impl ExecCall {
 /// Reperesents a contract call to a payable method that still needs the value transferred to be specified.
 /// Use the `with_value()` method to set the value.
 #[derive(Debug, Clone)]
-pub struct ExecCallNeedsValue {
+pub struct ExecCallNeedsValue<T: scale::Decode + Send> {
     /// The account id of the contract to call.
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
 }
 
-impl ExecCallNeedsValue {
+impl<T: scale::Decode + Send> ExecCallNeedsValue<T> {
     /// Create a new needs value call.
     pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
-        Self { account_id, data }
+        Self {
+            account_id,
+            data,
+            _return_type: Default::default(),
+        }
     }
 
     /// Set the value to be sent with the call.
-    pub fn with_value(self, value: u128) -> ExecCall {
+    pub fn with_value(self, value: u128) -> ExecCall<T> {
         ExecCall {
             value,
             ..ExecCall::new(self.account_id, self.data)

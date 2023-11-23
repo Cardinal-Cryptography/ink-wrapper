@@ -217,7 +217,7 @@ dependencies = [
 
 [[package]]
 name = "ink-wrapper"
-version = "0.6.1"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "clap",

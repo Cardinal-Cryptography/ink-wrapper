@@ -13,6 +13,8 @@ use ink_primitives::AccountId;
 pub use crate::aleph_client::*;
 #[cfg(feature = "drink")]
 pub use crate::drink::*;
+
+#[derive(Debug, Clone)]
 /// Represents a raw event emitted by a contract.
 pub struct ContractEvent {
     /// The account id of the contract that emitted the event.

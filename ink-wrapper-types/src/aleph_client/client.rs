@@ -179,7 +179,11 @@ impl SignedConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnectio
         Ok((account_id.into(), tx_info))
     }
 
-    async fn exec(&self, call: ExecCall, tx_status: crate::TxStatus) -> Result<TxInfo> {
+    async fn exec<T: scale::Decode + Send>(
+        &self,
+        call: ExecCall<T>,
+        tx_status: crate::TxStatus,
+    ) -> Result<TxInfo> {
         let result = dry_run(
             self.as_connection(),
             call.account_id,

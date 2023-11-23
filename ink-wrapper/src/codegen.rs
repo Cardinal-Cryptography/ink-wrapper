@@ -452,10 +452,11 @@ fn define_mutator_head(
 ) -> proc_macro2::TokenStream {
     let method = format_ident!("{}", message.method_name());
     let message_args = message_args(message.args(), metadata);
+    let exec_call_type = type_ref(message.return_type().opt_type().unwrap().ty().id, metadata);
     let ret_type = if message.payable() {
-        quote! { ink_wrapper_types::ExecCallNeedsValue }
+        quote! { ink_wrapper_types::ExecCallNeedsValue<#exec_call_type> }
     } else {
-        quote! { ink_wrapper_types::ExecCall }
+        quote! { ink_wrapper_types::ExecCall<#exec_call_type> }
     };
     let visibility = quote_visibility(visibility);
     quote! {

@@ -38,7 +38,7 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     }
 
     /// Perform the given mutating call.
-    async fn exec(&self, call: ExecCall, tx_status: TxStatus) -> Result<TxInfo, E>;
+    async fn exec<T: scale::Decode + Send>(&self, call: ExecCall<T>, tx_status: TxStatus) -> Result<TxInfo, E>;
 }
 
 /// A read-only connection - can invoke non-mutating methods and fetch events.
