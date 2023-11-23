@@ -6,7 +6,7 @@ use ink_wrapper_types::{Connection as _, SignedConnection as _, TxStatus, Upload
 use rand::RngCore as _;
 use test_contract::{Enum1, Struct1, Struct2};
 
-use crate::{helpers::connect_as_test_account, test_contract};
+use crate::{connect_as_test_account, test_contract};
 
 fn random_salt() -> Vec<u8> {
     let mut salt = vec![0; 32];

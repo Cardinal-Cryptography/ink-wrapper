@@ -1,8 +1,6 @@
 mod client;
 
-use ::drink::{
-    errors::MessageResult, runtime::HashFor, session::error::SessionError, DispatchError, Weight,
-};
+use ::drink::{runtime::HashFor, session::error::SessionError, DispatchError, Weight};
 pub use client::*;
 
 use crate::{ContractEvent, ExecCall, InstantiateCall, ReadCall, UploadCall};
@@ -32,6 +30,7 @@ impl From<SessionError> for Error {
 }
 
 pub trait Connection<R: frame_system::Config> {
+    // TODO return deposit as well.
     fn upload_code(&mut self, call: UploadCall) -> Result<HashFor<R>, Error>;
 
     fn instantiate<T: Send>(
@@ -39,16 +38,16 @@ pub trait Connection<R: frame_system::Config> {
         call: InstantiateCall<T>,
     ) -> Result<ContractInstantiateResult<R::AccountId>, Error>;
 
-    fn exec<T: scale::Decode + Send>(
+    fn execute<T: scale::Decode + Send>(
         &mut self,
         call: ExecCall<T>,
-    ) -> Result<ContractExecResult<MessageResult<T>>, Error>;
+    ) -> Result<ContractExecResult<T>, Error>;
 
     // like `exec`, but does not commit changes
-    fn read<T: scale::Decode + Send>(
+    fn query<T: scale::Decode + Send>(
         &mut self,
         call: ReadCall<T>,
-    ) -> Result<ContractReadResult<MessageResult<T>>, Error>;
+    ) -> Result<ContractReadResult<T>, Error>;
 }
 
 #[derive(Debug)]

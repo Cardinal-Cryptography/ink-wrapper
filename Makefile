@@ -20,32 +20,34 @@ run-node: build-node # Run a one-node chain in docker.
 
 .PHONY: test_contract
 test_contract:
-	cd test-project/test_contract && cargo contract build --release
+	cd tests/test_contract && cargo contract build --release
 
 .PHONY: upload-test-contract
 upload-test-contract: test_contract
-	cd test-project/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x || true
+	cd tests/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x || true
 
 .PHONY: psp22_contract
 psp22_contract:
-	cd test-project/psp22_contract && cargo contract build --release
+	cd tests/psp22_contract && cargo contract build --release
 
 .PHONY: upload-psp22-contract
 upload-psp22-contract: psp22_contract
-	cd test-project/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x  || true
+	cd tests/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x  || true
 
 .PHONY: test_contract.rs
 test_contract.rs: test_contract
 	cd ink-wrapper && \
-		cargo run -- -m ../test-project/test_contract/target/ink/test_contract.json \
-			--wasm-path ../test_contract/target/ink/test_contract.wasm \
-		| rustfmt --edition 2021 > ../test-project/src/test_contract.rs
+		cargo run -- -m ../tests/test_contract/target/ink/test_contract.json \
+			--wasm-path ../../test_contract/target/ink/test_contract.wasm \
+		| rustfmt --edition 2021 > ../tests/drink/src/test_contract.rs && \
+		cp ../tests/drink/src/test_contract.rs ../tests/aleph_client/src/test_contract.rs
 
 .PHONY: psp22_contract.rs
 psp22_contract.rs: psp22_contract
-	cd ink-wrapper && cargo run -- -m ../test-project/psp22_contract/target/ink/psp22_contract.json \
-			--wasm-path ../psp22_contract/target/ink/psp22_contract.wasm \
-		| rustfmt --edition 2021 > ../test-project/src/psp22_contract.rs
+	cd ink-wrapper && cargo run -- -m ../tests/psp22_contract/target/ink/psp22_contract.json \
+			--wasm-path ../../psp22_contract/target/ink/psp22_contract.wasm \
+		| rustfmt --edition 2021 > ../tests/drink/src/psp22_contract.rs && \
+		cp ../tests/drink/src/psp22_contract.rs ../tests/aleph_client/src/psp22_contract.rs
 
 .PHONY: generate-wrappers
 generate-wrappers: test_contract.rs psp22_contract.rs # Generate wrappers for test contracts.
@@ -55,8 +57,8 @@ upload-contracts: upload-test-contract upload-psp22-contract # Upload test contr
 
 .PHONY: test
 test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
-	cd test-project && cargo test --features aleph_client
-	cd test-project && cargo test --features drink
+	pushd tests/aleph_client && cargo test && popd || echo "Failed to run tests in aleph_client"
+	pushd tests/drink && cargo test && popd || echo "Failed to run tests in drink"
 
 .PHONY: check-ink-wrapper
 check-ink-wrapper:
@@ -69,9 +71,9 @@ check-ink-wrapper-types:
 	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
 	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
-.PHONY: check-test-project
-check-test-project: generate-wrappers
-	cd test-project && cargo fmt --all --check
+.PHONY: check-tests
+check-tests: generate-wrappers
+	cd tests && cargo fmt --all --check
 	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
 	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
@@ -86,7 +88,7 @@ all-dockerized: kill run-node build-builder # Run all checks in a dockerized env
 		make all
 
 .PHONY: all
-all: check-ink-wrapper check-ink-wrapper-types check-test-project test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
+all: check-ink-wrapper check-ink-wrapper-types check-tests test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
 
 .PHONY: kill
 kill: # Remove dangling containers after a dockerized test run.

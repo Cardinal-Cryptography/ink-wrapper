@@ -1,11 +1,9 @@
 use ::drink::{
-    errors::MessageResult,
     pallet_contracts,
     runtime::{HashFor, MinimalRuntime},
     session::Session,
     Weight,
 };
-use scale::Decode;
 
 use super::*;
 use crate::util::ToAccountId;
@@ -56,10 +54,10 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         })
     }
 
-    fn exec<T: scale::Decode + Send>(
+    fn execute<T: scale::Decode + Send>(
         &mut self,
         call: ExecCall<T>,
-    ) -> Result<ContractExecResult<MessageResult<T>>, Error> {
+    ) -> Result<ContractExecResult<T>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
         let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
@@ -76,10 +74,10 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         Ok(result)
     }
 
-    fn read<T: scale::Decode + Send>(
+    fn query<T: scale::Decode + Send>(
         &mut self,
         call: ReadCall<T>,
-    ) -> Result<ContractReadResult<MessageResult<T>>, Error> {
+    ) -> Result<ContractReadResult<T>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
         let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
@@ -106,7 +104,7 @@ fn call_contract<T: scale::Decode + Send>(
     address: <MinimalRuntime as frame_system::Config>::AccountId,
     value: u128,
     data: Vec<u8>,
-) -> Result<ContractResult<MessageResult<T>>, Error> {
+) -> Result<ContractResult<T>, Error> {
     let result = sandbox.call_contract(
         address,
         value,
@@ -117,13 +115,12 @@ fn call_contract<T: scale::Decode + Send>(
         pallet_contracts::Determinism::Enforced,
     );
 
-    let message_result: MessageResult<T> = match &result.result {
+    let message_result: T = match &result.result {
         Ok(exec_result) if exec_result.did_revert() => Err(Error::CallReverted),
         Ok(exec_result) => {
             let encoded = exec_result.data.clone();
-            println!("encoded: {:?}", encoded);
 
-            MessageResult::<T>::decode(&mut encoded.as_slice()).map_err(|err| {
+            T::decode(&mut encoded.as_slice()).map_err(|err| {
                 Error::DecodingError(format!(
                     "Failed to decode the result of calling a contract: {err:?}",
                 ))
