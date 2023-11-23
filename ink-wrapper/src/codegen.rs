@@ -165,12 +165,10 @@ where
 
     let impl_messages = messages.iter().map(|m| define_message(m, "", metadata));
     quote! {
-        #[async_trait::async_trait]
         pub trait #trait_name {
             #(#trait_messages;)*
         }
 
-        #[async_trait::async_trait]
         impl #trait_name for Instance {
             #(#impl_messages)*
         }
