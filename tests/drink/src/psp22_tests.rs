@@ -1,24 +1,17 @@
 use anyhow::Result;
 use assert2::assert;
-use drink::{runtime::MinimalRuntime, session::Session, AccountId32};
+use drink::{runtime::MinimalRuntime, session::Session};
 use ink_primitives::AccountId;
 use ink_wrapper_types::{util::ToAccountId, Connection};
 use psp22_contract::{Instance, PSP22 as _};
 
-use crate::psp22_contract;
+use crate::*;
 
-const ALICE: drink::AccountId32 = AccountId32::new([0u8; 32]);
-const BOB: drink::AccountId32 = AccountId32::new([1u8; 32]);
-
-fn alice() -> ink_primitives::AccountId {
-    AsRef::<[u8; 32]>::as_ref(&ALICE).clone().into()
-}
-
-fn bob() -> ink_primitives::AccountId {
-    AsRef::<[u8; 32]>::as_ref(&BOB).clone().into()
-}
-
-fn balance_of(session: &mut Session<MinimalRuntime>, psp22: Instance, account: AccountId) -> u128 {
+pub fn balance_of(
+    session: &mut Session<MinimalRuntime>,
+    psp22: Instance,
+    account: AccountId,
+) -> u128 {
     session
         .query(psp22.balance_of(account))
         .unwrap()
@@ -26,46 +19,61 @@ fn balance_of(session: &mut Session<MinimalRuntime>, psp22: Instance, account: A
         .unwrap()
 }
 
-#[test]
-fn test_transfers() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("initi new Session");
-
+pub fn setup(session: &mut Session<MinimalRuntime>, caller: drink::AccountId32) -> Instance {
     let _code_hash = session.upload_code(psp22_contract::upload()).unwrap();
 
-    let _ = session.set_actor(BOB);
+    let _ = session.set_actor(caller);
 
-    let instance: Instance = session
+    session
         .instantiate(Instance::new(1000))
         .unwrap()
         .result
         .to_account_id()
-        .into();
+        .into()
+}
+
+#[test]
+fn test_transfers() -> Result<()> {
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
+
+    let transfer_amount = 100;
 
     let alice_balance = balance_of(&mut session, instance, alice().into());
     let bob_balance = balance_of(&mut session, instance, bob().into());
 
-    println!("alice balance: {}", alice_balance);
-    println!("bob balance: {}", bob_balance);
+    let _res = session
+        .execute(instance.transfer(alice().into(), transfer_amount, vec![]))
+        .unwrap();
 
-    let res = session.execute(instance.transfer(alice().into(), 100, vec![]));
-    println!("res: {:?}", res);
-
-    assert!(balance_of(&mut session, instance, alice().into()) == alice_balance + 100);
-
+    assert!(balance_of(&mut session, instance, bob().into()) == bob_balance - transfer_amount);
+    assert!(balance_of(&mut session, instance, alice().into()) == alice_balance + transfer_amount);
     Ok(())
 }
 
-// fn test_burn() -> Result<()> {
-//     use psp22_contract::{PSP22Burnable as _, PSP22 as _};
+#[test]
+fn test_burn() -> Result<()> {
+    use crate::psp22_contract::PSP22Burnable;
 
-//     let (conn, contract) = connect_and_deploy().await?;
-//     let supply_before = conn.read(contract.total_supply()).await?.unwrap();
-//     let account_id = conn.account_id().to_account_id();
+    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
+    let instance = setup(&mut session, BOB);
+    let supply_before = session
+        .query(instance.total_supply())
+        .unwrap()
+        .result
+        .unwrap();
 
-//     conn.exec(contract.burn(account_id.into(), 100), TxStatus::Finalized)
-//         .await?;
+    let to_burn = 100;
 
-//     assert!(conn.read(contract.total_supply()).await?.unwrap() == supply_before - 100);
+    let _res = session.execute(instance.burn(bob(), to_burn)).unwrap();
 
-//     Ok(())
-// }
+    let supply_after = session
+        .query(instance.total_supply())
+        .unwrap()
+        .result
+        .unwrap();
+
+    assert!(supply_after == supply_before - to_burn);
+
+    Ok(())
+}

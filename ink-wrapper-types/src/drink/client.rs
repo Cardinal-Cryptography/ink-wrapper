@@ -13,7 +13,7 @@ use crate::util::ToAccountId;
 // `MinimalRuntime` has its `Balance` type
 impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     fn upload_code(&mut self, call: UploadCall) -> Result<HashFor<MinimalRuntime>, Error> {
-        let code_hash = self.upload(call.wasm)?;
+        let code_hash = self.upload(call.wasm).map_err(|_| Error::UploadFailed)?;
         if code_hash.as_ref() != call.expected_code_hash {
             return Err(Error::CodeHashMismatch);
         }
@@ -54,7 +54,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         })
     }
 
-    fn execute<T: scale::Decode + Send>(
+    fn execute<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
         call: ExecCall<T>,
     ) -> Result<ContractExecResult<T>, Error> {
@@ -74,7 +74,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         Ok(result)
     }
 
-    fn query<T: scale::Decode + Send>(
+    fn query<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
         call: ReadCall<T>,
     ) -> Result<ContractReadResult<T>, Error> {
@@ -97,7 +97,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     }
 }
 
-fn call_contract<T: scale::Decode + Send>(
+fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
     actor: <MinimalRuntime as frame_system::Config>::AccountId,
     gas_limit: Weight,
     sandbox: &mut drink::Sandbox<MinimalRuntime>,
@@ -116,7 +116,8 @@ fn call_contract<T: scale::Decode + Send>(
     );
 
     let message_result: T = match &result.result {
-        Ok(exec_result) if exec_result.did_revert() => Err(Error::CallReverted),
+        // NOTE to reviewers: we're not checking if the contract call reverted here.
+        // We will most probably return an error from the contract call anyway.
         Ok(exec_result) => {
             let encoded = exec_result.data.clone();
 

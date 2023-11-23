@@ -1,32 +1,24 @@
 mod client;
 
-use ::drink::{runtime::HashFor, session::error::SessionError, DispatchError, Weight};
+use ::drink::{runtime::HashFor, DispatchError, Weight};
 pub use client::*;
 
 use crate::{ContractEvent, ExecCall, InstantiateCall, ReadCall, UploadCall};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("Drink error: {0}")]
-    DrinkError(SessionError),
     #[error("Decoding error: {0}")]
     DecodingError(String),
+    #[error("Upload failed")]
+    UploadFailed,
     #[error("Code hash mismatch")]
     CodeHashMismatch,
     #[error("Deployment reverted")]
     DeploymentReverted,
     #[error("Deployment failed: {0:?}")]
     DeploymentFailed(DispatchError),
-    #[error("Contract call reverted")]
-    CallReverted,
     #[error("Contract call failed: {0:?}")]
     CallFailed(DispatchError),
-}
-
-impl From<SessionError> for Error {
-    fn from(e: SessionError) -> Self {
-        Self::DrinkError(e)
-    }
 }
 
 pub trait Connection<R: frame_system::Config> {
@@ -38,13 +30,13 @@ pub trait Connection<R: frame_system::Config> {
         call: InstantiateCall<T>,
     ) -> Result<ContractInstantiateResult<R::AccountId>, Error>;
 
-    fn execute<T: scale::Decode + Send>(
+    fn execute<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
         call: ExecCall<T>,
     ) -> Result<ContractExecResult<T>, Error>;
 
     // like `exec`, but does not commit changes
-    fn query<T: scale::Decode + Send>(
+    fn query<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
         call: ReadCall<T>,
     ) -> Result<ContractReadResult<T>, Error>;
