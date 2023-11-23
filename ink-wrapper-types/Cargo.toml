@@ -19,7 +19,7 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
     "derive",
 ] }
 anyhow = { version = "1.0.51" }
-
+thiserror = { version = "1.0.40" }
 
 # aleph_client specific integration.
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node", package = "aleph_client", tag = "r-12.1", optional = true }

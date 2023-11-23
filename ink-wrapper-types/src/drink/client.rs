@@ -8,6 +8,7 @@ use ::drink::{
 use scale::Decode;
 
 use super::*;
+use crate::util::ToAccountId;
 
 // NOTE: This needs to be fixed at `MinimalRuntime` as `ink-wrapper` uses `u128` to represent
 // token balances. `R::Balance` is a trait which does not provide conversion from `u128`.
@@ -15,7 +16,7 @@ use super::*;
 impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     fn upload_code(&mut self, call: UploadCall) -> Result<HashFor<MinimalRuntime>, Error> {
         let code_hash = self.upload(call.wasm)?;
-        if code_hash.as_ref() != &call.expected_code_hash {
+        if code_hash.as_ref() != call.expected_code_hash {
             return Err(Error::CodeHashMismatch);
         }
         Ok(code_hash)
@@ -43,9 +44,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
             Ok(exec_result) if exec_result.result.did_revert() => {
                 Err(Error::DrinkError(SessionError::DeploymentReverted))
             }
-            Err(err) => Err(Error::DrinkError(
-                SessionError::DeploymentFailed(*err).into(),
-            )),
+            Err(err) => Err(Error::DrinkError(SessionError::DeploymentFailed(*err))),
             Ok(exec_result) => Ok(exec_result.account_id.clone()),
         }?;
 
@@ -65,7 +64,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     ) -> Result<ContractExecResult<MessageResult<T>>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
-        let result = call_contract(actor, gas_limit, &mut self.sandbox(), call)?;
+        let result = call_contract(actor, gas_limit, self.sandbox(), call)?;
 
         Ok(result)
     }
@@ -91,7 +90,7 @@ fn call_contract<T: scale::Decode + Send>(
     call: ReadCall<T>,
 ) -> Result<ContractResult<MessageResult<T>>, Error> {
     let result = sandbox.call_contract(
-        AsRef::<[u8; 32]>::as_ref(&call.account_id).clone().into(),
+        (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into(),
         call.value,
         call.data,
         actor,
@@ -141,7 +140,7 @@ fn extract_events(
         .filter_map(|event| match event {
             pallet_contracts::pallet::Event::ContractEmitted { contract, data } => {
                 Some(ContractEvent {
-                    account_id: AsRef::<[u8; 32]>::as_ref(&contract).clone().into(),
+                    account_id: contract.to_account_id(),
                     data,
                 })
             }

@@ -5,9 +5,13 @@ pub use client::*;
 
 use crate::{ContractEvent, InstantiateCall, ReadCall, UploadCall};
 
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("Drink error: {0}")]
     DrinkError(SessionError),
+    #[error("Decoding error: {0}")]
     DecodingError(String),
+    #[error("Code hash mismatch")]
     CodeHashMismatch,
 }
 
