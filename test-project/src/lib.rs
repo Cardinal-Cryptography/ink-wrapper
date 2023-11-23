@@ -1,6 +1,8 @@
 #[cfg(all(test, feature = "aleph_client"))]
 mod aleph_client;
-#[cfg(test)]
-mod helpers;
+
+#[cfg(all(test, feature = "drink"))]
+mod drink;
+
 mod psp22_contract;
 mod test_contract;
