@@ -57,8 +57,8 @@ upload-contracts: upload-test-contract upload-psp22-contract # Upload test contr
 
 .PHONY: test
 test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
-	pushd tests/aleph_client && cargo test && popd || echo "Failed to run tests in aleph_client"
-	pushd tests/drink && cargo test && popd || echo "Failed to run tests in drink"
+	cd tests/aleph_client && cargo test || echo "Failed to run tests in aleph_client"
+	cd tests/drink && cargo test || echo "Failed to run tests in drink"
 
 .PHONY: check-ink-wrapper
 check-ink-wrapper:
@@ -73,7 +73,8 @@ check-ink-wrapper-types:
 
 .PHONY: check-tests
 check-tests: generate-wrappers
-	cd tests && cargo fmt --all --check
+	cd tests/aleph_client && cargo fmt --all --check
+	cd tests/drink && cargo fmt --all --check
 	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
 	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
