@@ -1,18 +1,25 @@
 #[cfg(feature = "aleph_client")]
 mod aleph_client;
-mod calls;
+#[cfg(feature = "aleph_client")]
+pub use crate::aleph_client::*;
+#[cfg(feature = "drink")]
+pub use crate::drink::*;
 #[cfg(feature = "drink")]
 mod drink;
+
+// Rust features are additive, so this is the only way we can ensure that only one of these is
+// enabled.
+#[cfg(all(feature = "drink", feature = "aleph_client"))]
+compile_error!(
+    "Features `drink` and `aleph_client` are mutually exclusive and cannot be used together"
+);
+
+mod calls;
 
 pub mod util;
 
 pub use calls::*;
 use ink_primitives::AccountId;
-
-#[cfg(feature = "aleph_client")]
-pub use crate::aleph_client::*;
-#[cfg(feature = "drink")]
-pub use crate::drink::*;
 
 #[derive(Debug, Clone)]
 /// Represents a raw event emitted by a contract.
