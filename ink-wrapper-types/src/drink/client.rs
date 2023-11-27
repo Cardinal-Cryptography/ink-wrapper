@@ -148,7 +148,6 @@ fn extract_events(
         .unwrap_or_default()
         .into_iter()
         .filter_map(|event| match event.event {
-            // For now, just interested in pallet contract events.
             drink::runtime::minimal::RuntimeEvent::Contracts(events) => Some(events),
             _ => None,
         })
