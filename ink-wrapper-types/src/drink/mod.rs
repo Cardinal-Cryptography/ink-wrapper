@@ -35,7 +35,7 @@ pub trait Connection<R: frame_system::Config> {
         call: ExecCall<T>,
     ) -> Result<ContractExecResult<T>, Error>;
 
-    // like `exec`, but does not commit changes
+    /// Like `exec`, but does not commit changes
     fn query<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
         call: ReadCall<T>,
