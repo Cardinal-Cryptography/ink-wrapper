@@ -8,6 +8,8 @@ use ::drink::{
 use super::*;
 use crate::util::ToAccountId;
 
+type MinimalRuntimeAccount = <MinimalRuntime as frame_system::Config>::AccountId;
+
 // NOTE: This needs to be fixed at `MinimalRuntime` as `ink-wrapper` uses `u128` to represent
 // token balances. `R::Balance` is a trait which does not provide conversion from `u128`.
 // `MinimalRuntime` has its `Balance` type
@@ -23,8 +25,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     fn instantiate<T: Send>(
         &mut self,
         call: InstantiateCall<T>,
-    ) -> Result<ContractInstantiateResult<<MinimalRuntime as frame_system::Config>::AccountId>, Error>
-    {
+    ) -> Result<ContractInstantiateResult<MinimalRuntimeAccount>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
 
@@ -88,10 +89,10 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
 }
 
 fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
-    actor: <MinimalRuntime as frame_system::Config>::AccountId,
+    actor: MinimalRuntimeAccount,
     gas_limit: Weight,
     sandbox: &mut drink::Sandbox<MinimalRuntime>,
-    address: <MinimalRuntime as frame_system::Config>::AccountId,
+    address: MinimalRuntimeAccount,
     value: u128,
     data: Vec<u8>,
 ) -> Result<ContractResult<T>, Error> {
