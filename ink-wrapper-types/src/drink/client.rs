@@ -12,7 +12,7 @@ type MinimalRuntimeAccount = <MinimalRuntime as frame_system::Config>::AccountId
 
 // NOTE: This needs to be fixed at `MinimalRuntime` as `ink-wrapper` uses `u128` to represent
 // token balances. `R::Balance` is a trait which does not provide conversion from `u128`.
-// `MinimalRuntime` has its `Balance` type
+// `MinimalRuntime` has its `Balance` type fixed to `u128`.
 impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
     fn upload_code(&mut self, call: UploadCall) -> Result<HashFor<MinimalRuntime>, Error> {
         let code_hash = self.upload(call.wasm).map_err(|_| Error::UploadFailed)?;
