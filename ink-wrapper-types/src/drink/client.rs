@@ -83,14 +83,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
 
         let result = self.sandbox().dry_run(|sandbox| {
-            call_contract(
-                actor,
-                gas_limit,
-                sandbox,
-                contract_address,
-                call.value,
-                call.data,
-            )
+            call_contract(actor, gas_limit, sandbox, contract_address, 0, call.data)
         })?;
 
         Ok(result)

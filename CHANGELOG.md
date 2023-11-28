@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- `ReadCall` gets new argument `value: u128` representing native tokens transferred. 
 - `ExecCall` gets new trait bound `T` to reperesent type of the returned value.
 
 ## 0.6.1
