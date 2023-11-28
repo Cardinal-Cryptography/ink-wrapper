@@ -48,6 +48,7 @@ pub struct ContractResult<R> {
     pub gas_required: Weight,
     pub result: R,
     pub events: Vec<ContractEvent>,
+    pub reverted: bool,
 }
 
 impl<R: Clone> Clone for ContractResult<R> {
@@ -57,6 +58,7 @@ impl<R: Clone> Clone for ContractResult<R> {
             gas_required: self.gas_required,
             result: self.result.clone(),
             events: self.events.clone(),
+            reverted: self.reverted,
         }
     }
 }

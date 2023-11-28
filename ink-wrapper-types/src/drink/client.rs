@@ -51,6 +51,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
             gas_required: instantiate_contract_result.gas_required,
             result: contract_address,
             events,
+            reverted: false,
         })
     }
 
@@ -62,16 +63,14 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         let gas_limit = self.get_gas_limit();
         let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
 
-        let result = call_contract(
+        call_contract(
             actor,
             gas_limit,
             self.sandbox(),
             contract_address,
             call.value,
             call.data,
-        )?;
-
-        Ok(result)
+        )
     }
 
     fn query<T: scale::Decode + Send + std::fmt::Debug>(
@@ -82,11 +81,9 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         let gas_limit = self.get_gas_limit();
         let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
 
-        let result = self.sandbox().dry_run(|sandbox| {
+        self.sandbox().dry_run(|sandbox| {
             call_contract(actor, gas_limit, sandbox, contract_address, 0, call.data)
-        })?;
-
-        Ok(result)
+        })
     }
 }
 
@@ -130,6 +127,12 @@ fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
         gas_required: result.gas_required,
         result: message_result,
         events,
+        reverted: result
+            .result
+            .map(|exec_result| exec_result.did_revert())
+            .expect(
+            "If `result.result` was `err`, we should have returned `Err` from the whole function.",
+        ),
     })
 }
 
