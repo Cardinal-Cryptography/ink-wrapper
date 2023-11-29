@@ -12,7 +12,7 @@ pub trait UploadConnection<TxInfo, E>: Sync {
     ///
     /// Implementation is optional, the default calls `unimplemented!()`.
     /// The implementor SHOULD verify that the code hash resulting from the upload is equal to the given `code_hash`.
-    async fn upload(&self, _call: UploadCall, _tx_status: TxStatus) -> Result<TxInfo, E> {
+    async fn upload(&self, _call: UploadCall) -> Result<TxInfo, E> {
         unimplemented!()
     }
 }
@@ -24,25 +24,19 @@ pub trait SignedConnection<TxInfo, E>: Sync {
     async fn instantiate_tx<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
-        tx_status: TxStatus,
     ) -> Result<(T, TxInfo), E>;
 
     /// A convenience method that unpacks the result of `instantiate_tx` if you're not interested in the `TxInfo`.
     async fn instantiate<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
-        tx_status: TxStatus,
     ) -> Result<T, E> {
-        let (contract, _) = self.instantiate_tx(call, tx_status).await?;
+        let (contract, _) = self.instantiate_tx(call).await?;
         Ok(contract)
     }
 
     /// Perform the given mutating call.
-    async fn exec<T: scale::Decode + Send>(
-        &self,
-        call: ExecCall<T>,
-        tx_status: TxStatus,
-    ) -> Result<TxInfo, E>;
+    async fn exec<T: scale::Decode + Send>(&self, call: ExecCall<T>) -> Result<TxInfo, E>;
 }
 
 /// A read-only connection - can invoke non-mutating methods and fetch events.

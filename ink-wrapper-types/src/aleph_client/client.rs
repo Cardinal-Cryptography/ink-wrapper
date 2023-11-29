@@ -98,7 +98,7 @@ impl<C: AsConnection + Send + Sync> Connection<TxInfo, Error> for C {
 
 #[async_trait]
 impl UploadConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnection {
-    async fn upload(&self, call: UploadCall, tx_status: crate::TxStatus) -> Result<TxInfo> {
+    async fn upload(&self, call: UploadCall) -> Result<TxInfo> {
         let origin = self.account_id().clone().into();
         let determinism = Determinism::Enforced;
 
@@ -126,7 +126,12 @@ impl UploadConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnectio
         }
 
         let tx_info = self
-            .upload_code(call.wasm, None, Determinism::Enforced, tx_status.into())
+            .upload_code(
+                call.wasm,
+                None,
+                Determinism::Enforced,
+                call.tx_status.into(),
+            )
             .await?;
 
         Ok(tx_info)
@@ -138,7 +143,6 @@ impl SignedConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnectio
     async fn instantiate_tx<T: Send + From<AccountId>>(
         &self,
         call: InstantiateCall<T>,
-        tx_status: crate::TxStatus,
     ) -> Result<(T, TxInfo)> {
         let origin = self.account_id().clone().into();
         let value = call.value;
@@ -172,18 +176,14 @@ impl SignedConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnectio
             None,
             call.data,
             call.salt,
-            tx_status.into(),
+            call.tx_status.into(),
         )
         .await?;
 
         Ok((account_id.into(), tx_info))
     }
 
-    async fn exec<T: scale::Decode + Send>(
-        &self,
-        call: ExecCall<T>,
-        tx_status: crate::TxStatus,
-    ) -> Result<TxInfo> {
+    async fn exec<T: scale::Decode + Send>(&self, call: ExecCall<T>) -> Result<TxInfo> {
         let result = dry_run(
             self.as_connection(),
             call.account_id,
@@ -203,7 +203,7 @@ impl SignedConnection<TxInfo, anyhow::Error> for ::aleph_client::SignedConnectio
             },
             None,
             call.data,
-            tx_status.into(),
+            call.tx_status.into(),
         )
         .await
     }

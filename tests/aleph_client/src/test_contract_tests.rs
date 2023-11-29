@@ -17,10 +17,7 @@ fn random_salt() -> Vec<u8> {
 async fn connect_and_deploy() -> Result<(SignedConnection, test_contract::Instance)> {
     let conn = connect_as_test_account().await?;
     let contract = conn
-        .instantiate(
-            test_contract::Instance::default().with_salt(random_salt()),
-            TxStatus::Finalized,
-        )
+        .instantiate(test_contract::Instance::default().with_salt(random_salt()))
         .await?;
 
     Ok((conn, contract))
@@ -32,8 +29,7 @@ async fn test_simple_integer_messages() -> Result<()> {
 
     let old_val = conn.read(contract.get_u32()).await??;
     let new_val = old_val + 42;
-    conn.exec(contract.set_u32(new_val), TxStatus::Finalized)
-        .await?;
+    conn.exec(contract.set_u32(new_val)).await?;
 
     assert!(conn.read(contract.get_u32()).await?? == new_val);
 
@@ -52,8 +48,7 @@ async fn test_struct_messages() -> Result<()> {
         },
         Enum1::B(3),
     );
-    conn.exec(contract.set_struct2(val.clone()), TxStatus::Finalized)
-        .await?;
+    conn.exec(contract.set_struct2(val.clone())).await?;
     assert!(conn.read(contract.get_struct2()).await?? == val);
 
     Ok(())
@@ -63,10 +58,8 @@ async fn test_struct_messages() -> Result<()> {
 async fn test_array_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    conn.exec(contract.set_array([1, 2, 3]), TxStatus::Finalized)
-        .await?;
-    conn.exec(contract.set_enum1(Enum1::A()), TxStatus::Finalized)
-        .await?;
+    conn.exec(contract.set_array([1, 2, 3])).await?;
+    conn.exec(contract.set_enum1(Enum1::A())).await?;
     assert!(conn.read(contract.get_array()).await?? == [(1, Enum1::A()), (1, Enum1::A())]);
 
     Ok(())
@@ -76,10 +69,8 @@ async fn test_array_messages() -> Result<()> {
 async fn test_sequence_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    conn.exec(contract.set_sequence(vec![5, 2, 3]), TxStatus::Finalized)
-        .await?;
-    conn.exec(contract.set_enum1(Enum1::A()), TxStatus::Finalized)
-        .await?;
+    conn.exec(contract.set_sequence(vec![5, 2, 3])).await?;
+    conn.exec(contract.set_enum1(Enum1::A())).await?;
     assert!(conn.read(contract.get_array()).await?? == [(5, Enum1::A()), (5, Enum1::A())]);
 
     Ok(())
@@ -89,11 +80,7 @@ async fn test_sequence_messages() -> Result<()> {
 async fn test_compact_messages() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    conn.exec(
-        contract.set_compact(scale::Compact(42)),
-        TxStatus::Finalized,
-    )
-    .await?;
+    conn.exec(contract.set_compact(scale::Compact(42))).await?;
     assert!(conn.read(contract.get_compact()).await?? == scale::Compact(42));
 
     Ok(())
@@ -103,11 +90,8 @@ async fn test_compact_messages() -> Result<()> {
 async fn test_messages_with_clashing_argument_names() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    conn.exec(
-        contract.set_forbidden_names(1, 2, 3, 4, 5),
-        TxStatus::Finalized,
-    )
-    .await?;
+    conn.exec(contract.set_forbidden_names(1, 2, 3, 4, 5))
+        .await?;
     assert!(conn.read(contract.get_u32()).await?? == 1 + 2 + 3 + 4 + 5);
     assert!(
         conn.read(contract.get_forbidden_names(1, 2, 3, 4, 5))
@@ -121,8 +105,7 @@ async fn test_messages_with_clashing_argument_names() -> Result<()> {
 #[tokio::test]
 async fn test_conversion_to_account_id() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
-    conn.exec(contract.set_u32(12345), TxStatus::Finalized)
-        .await?;
+    conn.exec(contract.set_u32(12345)).await?;
 
     let account_id: AccountId = contract.into();
     let contract: test_contract::Instance = account_id.into();
@@ -146,14 +129,10 @@ async fn test_events() -> Result<()> {
         },
         Enum1::B(3),
     );
-    conn.exec(contract.set_u32(123), TxStatus::Finalized)
-        .await?;
-    conn.exec(contract.set_struct2(struct2.clone()), TxStatus::Finalized)
-        .await?;
+    conn.exec(contract.set_u32(123)).await?;
+    conn.exec(contract.set_struct2(struct2.clone())).await?;
     let struct1 = conn.read(contract.get_struct1()).await??;
-    let tx_info = conn
-        .exec(contract.generate_events(), TxStatus::Finalized)
-        .await?;
+    let tx_info = conn.exec(contract.generate_events()).await?;
     let events = conn.get_contract_events(tx_info).await?;
     let events = events.for_contract(contract);
 
@@ -190,10 +169,7 @@ async fn test_ink_lang_error() -> Result<()> {
 async fn test_upload() -> Result<()> {
     let conn = connect_as_test_account().await?;
 
-    assert!(conn
-        .upload(test_contract::upload(), TxStatus::Finalized)
-        .await
-        .is_ok());
+    assert!(conn.upload(test_contract::upload()).await.is_ok());
 
     Ok(())
 }
@@ -202,12 +178,7 @@ async fn test_upload() -> Result<()> {
 async fn test_receiving_value() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
-    let tx_info = conn
-        .exec(
-            contract.receive_value().with_value(123),
-            TxStatus::Finalized,
-        )
-        .await?;
+    let tx_info = conn.exec(contract.receive_value().with_value(123)).await?;
     let events = conn.get_contract_events(tx_info).await?;
     let events = events.for_contract(contract);
 
@@ -225,7 +196,6 @@ async fn test_receiving_value_in_constructor() -> Result<()> {
             test_contract::Instance::payable_constructor()
                 .with_value(123)
                 .with_salt(random_salt()),
-            TxStatus::Finalized,
         )
         .await?;
     let events = conn.get_contract_events(tx_info).await?;
@@ -242,8 +212,9 @@ async fn test_constructor_waiting_for_submitted() -> Result<()> {
 
     let (_contract, tx_info) = conn
         .instantiate_tx(
-            test_contract::Instance::default().with_salt(random_salt()),
-            TxStatus::Submitted,
+            test_contract::Instance::default()
+                .with_salt(random_salt())
+                .with_tx_status(TxStatus::Submitted),
         )
         .await?;
 
@@ -257,7 +228,7 @@ async fn test_exec_waiting_for_submitted() -> Result<()> {
     let (conn, contract) = connect_and_deploy().await?;
 
     let tx_info = conn
-        .exec(contract.set_u32(123), TxStatus::Submitted)
+        .exec(contract.set_u32(123).with_tx_status(TxStatus::Submitted))
         .await?;
 
     assert!(tx_info.block_hash == [0; 32].into());
@@ -270,7 +241,7 @@ async fn test_upload_waiting_for_submitted() -> Result<()> {
     let conn = connect_as_test_account().await?;
 
     let tx_info = conn
-        .upload(test_contract::upload(), TxStatus::Submitted)
+        .upload(test_contract::upload().with_tx_status(TxStatus::Submitted))
         .await?;
 
     assert!(tx_info.block_hash == [0; 32].into());
