@@ -4,10 +4,7 @@ use assert2::assert;
 use ink_wrapper_types::{util::ToAccountId, Connection as _, SignedConnection as _};
 use rand::RngCore as _;
 
-use crate::{
-    helpers::{connect_as_test_account, random_account},
-    psp22_contract,
-};
+use crate::{connect_as_test_account, psp22_contract, random_account};
 
 async fn connect_and_deploy() -> Result<(SignedConnection, psp22_contract::Instance)> {
     let conn = connect_as_test_account().await?;

@@ -156,28 +156,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
-name = "genco"
-version = "0.17.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43de41c8ce1ed5ac84a1b11fb3e4ef604bf6773068798490eaa95e8151abad20"
-dependencies = [
- "genco-macros",
- "relative-path",
- "smallvec",
-]
-
-[[package]]
-name = "genco-macros"
-version = "0.17.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c85fd34848b1f708e6344a4af6f7bfc05172ae20ce4b35c8e417efffb4f306aa"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -239,14 +217,14 @@ dependencies = [
 
 [[package]]
 name = "ink-wrapper"
-version = "0.5.0"
+version = "0.7.0"
 dependencies = [
  "anyhow",
  "clap",
- "genco",
  "hex",
  "ink_metadata",
  "proc-macro2",
+ "quote",
  "scale-info",
  "serde",
  "serde_json",
@@ -254,9 +232,9 @@ dependencies = [
 
 [[package]]
 name = "ink_metadata"
-version = "4.3.0"
+version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fddff95ce3e01f42002fdaf96edda691dbccb08c9ae76d7101daa1fa634e601"
+checksum = "5dfcfa666ada5729c7e4d3d986cd196365a2c469459fced4fa31dc6ad87c4d8f"
 dependencies = [
  "derive_more",
  "impl-serde",
@@ -431,12 +409,6 @@ name = "radium"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc33ff2d4973d518d823d61aa239014831e521c75da58e3df4840d3f47749d09"
-
-[[package]]
-name = "relative-path"
-version = "1.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4bf2521270932c3c7bed1a59151222bd7643c79310f2916f01925e1e16255698"
 
 [[package]]
 name = "rustix"

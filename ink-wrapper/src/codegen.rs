@@ -165,12 +165,10 @@ where
 
     let impl_messages = messages.iter().map(|m| define_message(m, "", metadata));
     quote! {
-        #[async_trait::async_trait]
         pub trait #trait_name {
             #(#trait_messages;)*
         }
 
-        #[async_trait::async_trait]
         impl #trait_name for Instance {
             #(#impl_messages)*
         }
@@ -403,13 +401,17 @@ fn define_reader_head(
     visibility: &str,
     metadata: &InkProject,
 ) -> proc_macro2::TokenStream {
-    let method_name = format_ident!("{}", message.method_name());
+    let method = format_ident!("{}", message.method_name());
     let args = message_args(message.args(), metadata);
     let read_call_type = type_ref(message.return_type().opt_type().unwrap().ty().id, metadata);
+    let ret_type = if message.payable() {
+        quote! { ink_wrapper_types::ReadCallNeedsValue<#read_call_type> }
+    } else {
+        quote! { ink_wrapper_types::ReadCall<#read_call_type> }
+    };
     let visibility = quote_visibility(visibility);
     quote! {
-        #visibility fn #method_name(&self, #args) ->
-            ink_wrapper_types::ReadCall<#read_call_type>
+        #visibility fn #method (&self, #args) -> #ret_type
     }
 }
 
@@ -450,10 +452,11 @@ fn define_mutator_head(
 ) -> proc_macro2::TokenStream {
     let method = format_ident!("{}", message.method_name());
     let message_args = message_args(message.args(), metadata);
+    let exec_call_type = type_ref(message.return_type().opt_type().unwrap().ty().id, metadata);
     let ret_type = if message.payable() {
-        quote! { ink_wrapper_types::ExecCallNeedsValue }
+        quote! { ink_wrapper_types::ExecCallNeedsValue<#exec_call_type> }
     } else {
-        quote! { ink_wrapper_types::ExecCall }
+        quote! { ink_wrapper_types::ExecCall<#exec_call_type> }
     };
     let visibility = quote_visibility(visibility);
     quote! {

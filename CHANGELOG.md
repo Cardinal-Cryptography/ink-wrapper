@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- `ExecCall` gets new trait bound `T` to reperesent type of the returned value.
+
 ## 0.6.1
 
 ### Changed
