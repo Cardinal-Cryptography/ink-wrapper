@@ -41,13 +41,13 @@ async fn test_transfers() -> Result<()> {
 #[tokio::test]
 async fn test_burn() -> Result<()> {
     use aleph_client::SignedConnectionApi as _;
-    use psp22_contract::{PSP22Burnable as _, PSP22 as _};
+    use psp22_contract::PSP22;
 
     let (conn, contract) = connect_and_deploy().await?;
     let supply_before = conn.read(contract.total_supply()).await?.unwrap();
-    let account_id = conn.account_id().to_account_id();
+    let _account_id = conn.account_id().to_account_id();
 
-    conn.exec(contract.burn(account_id.into(), 100)).await?;
+    conn.exec(contract.burn(100)).await?;
 
     assert!(conn.read(contract.total_supply()).await?.unwrap() == supply_before - 100);
 

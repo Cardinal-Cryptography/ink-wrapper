@@ -5,7 +5,7 @@ authors = ["Brushfam <green@727.ventures>"]
 edition = "2021"
 
 [dependencies]
-ink = { version = "4.2.1", default-features = false }
+ink = { version = "=4.3.0", default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [
     "derive",
@@ -14,9 +14,7 @@ scale-info = { version = "2.9", default-features = false, features = [
     "derive",
 ], optional = true }
 
-openbrush = { git = "https://github.com/727-Ventures/openbrush-contracts/", tag = "3.1.0", default-features = false, features = [
-    "psp22",
-] }
+psp22 = { version = "0.2", default-features = false }
 
 [lib]
 name = "psp22_contract"
@@ -24,7 +22,7 @@ path = "lib.rs"
 
 [features]
 default = ["std"]
-std = ["ink/std", "scale/std", "scale-info/std", "openbrush/std"]
+std = ["ink/std", "scale/std", "scale-info/std", "psp22/std"]
 ink-as-dependency = []
 
 [profile.dev]

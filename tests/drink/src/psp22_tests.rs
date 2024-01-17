@@ -53,8 +53,6 @@ fn test_transfers() -> Result<()> {
 
 #[test]
 fn test_burn() -> Result<()> {
-    use crate::psp22_contract::PSP22Burnable;
-
     let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
     let instance = setup(&mut session, BOB);
     let supply_before = session
@@ -65,7 +63,7 @@ fn test_burn() -> Result<()> {
 
     let to_burn = 100;
 
-    let _res = session.execute(instance.burn(bob(), to_burn)).unwrap();
+    let _res = session.execute(instance.burn(to_burn)).unwrap();
 
     let supply_after = session
         .query(instance.total_supply())
