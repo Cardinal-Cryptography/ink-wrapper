@@ -63,18 +63,6 @@ fn test_burn() -> Result<()> {
 
     let to_burn = 100;
 
-    // Verify that we can pass `ExecCall` to `query`
-    // and match on the error result.
-    session.set_actor(ALICE);
-    let err = session
-        .query(instance.burn(to_burn))
-        .unwrap()
-        .result
-        .unwrap();
-
-    assert!(err == Err(psp22_contract::PSP22Error::InsufficientBalance()));
-
-    session.set_actor(BOB);
     let _res = session.execute(instance.burn(to_burn)).unwrap();
 
     let supply_after = session

@@ -56,17 +56,9 @@ generate-wrappers: test_contract.rs psp22_contract.rs # Generate wrappers for te
 upload-contracts: upload-test-contract upload-psp22-contract # Upload test contracts to the chain.
 
 .PHONY: test
-test: drink-tests aleph-client-tests # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
+test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
 	cd tests/aleph_client && cargo test || echo "Failed to run tests in aleph_client"
 	cd tests/drink && cargo test || echo "Failed to run tests in drink"
-
-.PHONY: drink-tests
-drink-tests: generate-wrappers ## Runs tests for drink
-	cd tests/drink && cargo test || echo "Failed to run tests in drink"
-
-.PHONY: alepg-client-tests
-aleph-client-tests: generate-wrappers upload-contracts ## Runs tests for aleph_client
-	cd tests/aleph_client && cargo test || echo "Failed to run tests in aleph_client"
 
 .PHONY: check-ink-wrapper
 check-ink-wrapper:

@@ -146,40 +146,6 @@ impl<T: scale::Decode + Send> ExecCallNeedsValue<T> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct ReadCallArgs<T> {
-    /// The account id of the contract to call.
-    pub account_id: AccountId,
-    /// The encoded data of the call.
-    pub data: Vec<u8>,
-    /// The value to be sent with the call.
-    pub value: u128,
-    /// A marker for the type to decode the result into.
-    _return_type: PhantomData<T>,
-}
-
-impl<T: scale::Decode + Send> From<ReadCall<T>> for ReadCallArgs<T> {
-    fn from(value: ReadCall<T>) -> ReadCallArgs<T> {
-        ReadCallArgs {
-            account_id: value.account_id,
-            data: value.data.clone(),
-            value: value.value,
-            _return_type: Default::default(),
-        }
-    }
-}
-
-impl<T: scale::Decode + Send> From<ExecCall<T>> for ReadCallArgs<T> {
-    fn from(value: ExecCall<T>) -> ReadCallArgs<T> {
-        ReadCallArgs {
-            account_id: value.account_id,
-            data: value.data.clone(),
-            value: value.value,
-            _return_type: Default::default(),
-        }
-    }
-}
-
 /// Represents a read-only contract call to be made.
 #[derive(Debug, Clone)]
 pub struct ReadCall<T: scale::Decode + Send> {
@@ -187,8 +153,6 @@ pub struct ReadCall<T: scale::Decode + Send> {
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
-    /// The value to be sent with the call.
-    pub value: u128,
     /// A marker for the type to decode the result into.
     _return_type: PhantomData<T>,
 }
@@ -208,16 +172,7 @@ impl<T: scale::Decode + Send> ReadCall<T> {
         Self {
             account_id,
             data,
-            value: 0,
             _return_type: Default::default(),
-        }
-    }
-
-    /// Set the value to be sent with the call.
-    pub fn with_value(self, value: u128) -> Self {
-        Self {
-            value,
-            ..Self::new(self.account_id, self.data)
         }
     }
 }

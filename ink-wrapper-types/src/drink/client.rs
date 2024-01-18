@@ -74,24 +74,16 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
         )
     }
 
-    fn query<T: scale::Decode + Send + std::fmt::Debug, CallArgs: Into<ReadCallArgs<T>>>(
+    fn query<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
-        call: CallArgs,
+        call: ReadCall<T>,
     ) -> Result<ContractReadResult<T>, Error> {
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
-        let call_args = call.into();
-        let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call_args.account_id)).into();
+        let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
 
         self.sandbox().dry_run(|sandbox| {
-            call_contract(
-                actor,
-                gas_limit,
-                sandbox,
-                contract_address,
-                call_args.value,
-                call_args.data,
-            )
+            call_contract(actor, gas_limit, sandbox, contract_address, 0, call.data)
         })
     }
 }
