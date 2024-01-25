@@ -110,8 +110,6 @@ fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
     );
 
     let message_result: T = match &result.result {
-        // NOTE to reviewers: we're not checking if the contract call reverted here.
-        // We will most probably return an error from the contract call anyway.
         Ok(exec_result) => {
             let encoded = exec_result.data.clone();
 
