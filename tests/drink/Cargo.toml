@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-drink = "0.8"
+drink = "0.8.6"
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [
     "derive",
