@@ -8,16 +8,6 @@ build-builder:
 		--build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) \
 		ci
 
-.PHONY: build-node
-build-node:
-	docker build --tag aleph-onenode-chain --file ci/Dockerfile.aleph-node ci
-
-.PHONY: run-node
-run-node: build-node # Run a one-node chain in docker.
-	docker run --detach --rm --network host \
-		--name ink-wrapper-node \
-		aleph-onenode-chain
-
 .PHONY: test_contract
 test_contract:
 	cd tests/test_contract && cargo contract build --release
@@ -62,7 +52,7 @@ check-tests: generate-wrappers
 	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
 .PHONY: all-dockerized
-all-dockerized: kill run-node build-builder # Run all checks in a dockerized environment.
+all-dockerized: kill build-builder # Run all checks in a dockerized environment.
 	docker run --rm --network host \
 		--user "$(shell id -u):$(shell id -g)" \
 		--volume "$(shell pwd)":/code \
@@ -76,8 +66,8 @@ all: check-ink-wrapper check-ink-wrapper-types check-tests test # Run all checks
 
 .PHONY: kill
 kill: # Remove dangling containers after a dockerized test run.
-	docker kill ink-wrapper-builder ink-wrapper-node || true
+	docker kill ink-wrapper-builder || true
 
 .PHONY: clean
 clean: kill # Remove dangling containers and built images.
-	docker rmi -f ink-builder aleph-onenode-chain
+	docker rmi -f ink-builder
