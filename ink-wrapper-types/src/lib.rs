@@ -1,16 +1,7 @@
-#[cfg(feature = "aleph_client")]
-mod aleph_client;
-#[cfg(feature = "aleph_client")]
-pub use crate::aleph_client::*;
 #[cfg(feature = "drink")]
 pub use crate::drink::*;
 #[cfg(feature = "drink")]
 mod drink;
-
-#[cfg(all(feature = "drink", feature = "aleph_client"))]
-compile_error!(
-    "Features `drink` and `aleph_client` are mutually exclusive and cannot be used together"
-);
 
 mod calls;
 

@@ -22,42 +22,28 @@ run-node: build-node # Run a one-node chain in docker.
 test_contract:
 	cd tests/test_contract && cargo contract build --release
 
-.PHONY: upload-test-contract
-upload-test-contract: test_contract
-	cd tests/test_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x || true
-
 .PHONY: psp22_contract
 psp22_contract:
 	cd tests/psp22_contract && cargo contract build --release
-
-.PHONY: upload-psp22-contract
-upload-psp22-contract: psp22_contract
-	cd tests/psp22_contract && cargo contract upload --suri //Alice --url ws://localhost:9944 -x  || true
 
 .PHONY: test_contract.rs
 test_contract.rs: test_contract
 	cd ink-wrapper && \
 		cargo run -- -m ../tests/test_contract/target/ink/test_contract.json \
 			--wasm-path ../../test_contract/target/ink/test_contract.wasm \
-		| rustfmt --edition 2021 > ../tests/drink/src/test_contract.rs && \
-		cp ../tests/drink/src/test_contract.rs ../tests/aleph_client/src/test_contract.rs
+		| rustfmt --edition 2021 > ../tests/drink/src/test_contract.rs
 
 .PHONY: psp22_contract.rs
 psp22_contract.rs: psp22_contract
 	cd ink-wrapper && cargo run -- -m ../tests/psp22_contract/target/ink/psp22_contract.json \
 			--wasm-path ../../psp22_contract/target/ink/psp22_contract.wasm \
-		| rustfmt --edition 2021 > ../tests/drink/src/psp22_contract.rs && \
-		cp ../tests/drink/src/psp22_contract.rs ../tests/aleph_client/src/psp22_contract.rs
+		| rustfmt --edition 2021 > ../tests/drink/src/psp22_contract.rs
 
 .PHONY: generate-wrappers
 generate-wrappers: test_contract.rs psp22_contract.rs # Generate wrappers for test contracts.
 
-.PHONY: upload-contracts
-upload-contracts: upload-test-contract upload-psp22-contract # Upload test contracts to the chain.
-
 .PHONY: test
-test: generate-wrappers upload-contracts # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
-	cd tests/aleph_client && cargo test || echo "Failed to run tests in aleph_client"
+test: generate-wrappers # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
 	cd tests/drink && cargo test || echo "Failed to run tests in drink"
 
 .PHONY: check-ink-wrapper
@@ -68,14 +54,11 @@ check-ink-wrapper:
 .PHONY: check-ink-wrapper-types
 check-ink-wrapper-types:
 	cd ink-wrapper-types && cargo fmt --all --check
-	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
 	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
 .PHONY: check-tests
 check-tests: generate-wrappers
-	cd tests/aleph_client && cargo fmt --all --check
 	cd tests/drink && cargo fmt --all --check
-	cd ink-wrapper-types && cargo clippy --features aleph_client  -- --no-deps -D warnings
 	cd ink-wrapper-types && cargo clippy --features drink  -- --no-deps -D warnings
 
 .PHONY: all-dockerized
