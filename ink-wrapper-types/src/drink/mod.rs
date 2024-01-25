@@ -41,25 +41,13 @@ pub trait Connection<R: frame_system::Config> {
     ) -> Result<ContractReadResult<T>, Error>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ContractResult<R> {
     pub gas_consumed: Weight,
     pub gas_required: Weight,
     pub result: R,
     pub events: Vec<ContractEvent>,
     pub reverted: bool,
-}
-
-impl<R: Clone> Clone for ContractResult<R> {
-    fn clone(&self) -> Self {
-        Self {
-            gas_consumed: self.gas_consumed,
-            gas_required: self.gas_required,
-            result: self.result.clone(),
-            events: self.events.clone(),
-            reverted: self.reverted,
-        }
-    }
 }
 
 pub type ContractInstantiateResult<AccountId> = ContractResult<AccountId>;

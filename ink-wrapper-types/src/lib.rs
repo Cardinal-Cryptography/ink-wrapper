@@ -10,7 +10,7 @@ pub mod util;
 pub use calls::*;
 use ink_primitives::AccountId;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 /// Represents a raw event emitted by a contract.
 pub struct ContractEvent {
     /// The account id of the contract that emitted the event.
