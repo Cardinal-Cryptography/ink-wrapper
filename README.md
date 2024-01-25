@@ -17,6 +17,14 @@ Note that this uses `nightly-2023-04-19`. You will need to install the toolchain
 
 ## Usage
 
+### Note on compatibility.
+
+The last release compatible with `aleph_client` is version [`0.6.0`](https://crates.io/crates/ink-wrapper-types/0.6.0). Note though that it's compatible with `aleph-client` in version `3.0.0` as this is the last version available in [crates.io](https://crates.io/crates/aleph_client/versions). We do not guarantee it will work with Testnet or Mainnet since their runtimes may differ in ways that are not compatible with `aleph_client 3.0.0`.
+
+Current release focuses on compatibility with [drink](https://crates.io/crates/drink).
+
+Future releases will try to address the support for live chains.
+
 ### Setup
 
 Given some metadata file like `my_contract.json` run the tool and save the output to a file in your project:
@@ -40,6 +48,8 @@ Make sure the file you generated is included in your module structure:
 ```rust
 mod my_contract;
 ```
+
+### `aleph_client`
 
 You will need the following dependencies for the wrapper to work:
 
