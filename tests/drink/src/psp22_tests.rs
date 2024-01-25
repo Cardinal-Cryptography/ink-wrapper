@@ -19,23 +19,25 @@ pub fn balance_of(
         .unwrap()
 }
 
-pub fn setup(session: &mut Session<MinimalRuntime>, caller: drink::AccountId32) -> Instance {
+pub fn setup(caller: drink::AccountId32) -> (Session<MinimalRuntime>, Instance) {
+    let mut session = Session::new().expect("Init new Session");
     let _code_hash = session.upload_code(psp22_contract::upload()).unwrap();
 
     let _ = session.set_actor(caller);
 
-    session
+    let address = session
         .instantiate(Instance::new(1000))
         .unwrap()
         .result
         .to_account_id()
-        .into()
+        .into();
+
+    (session, address)
 }
 
 #[test]
 fn test_transfers() -> Result<()> {
-    let mut session = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let transfer_amount = 100;
 
@@ -53,8 +55,7 @@ fn test_transfers() -> Result<()> {
 
 #[test]
 fn test_burn() -> Result<()> {
-    let mut session = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
     let supply_before = session
         .query(instance.total_supply())
         .unwrap()

@@ -9,23 +9,25 @@ use crate::{
     *,
 };
 
-fn setup(session: &mut Session<MinimalRuntime>, caller: drink::AccountId32) -> Instance {
+fn setup(caller: drink::AccountId32) -> (Session<MinimalRuntime>, Instance) {
+    let mut session = Session::new().expect("Init new Session");
     let _code_hash = session.upload_code(test_contract::upload()).unwrap();
 
     let _ = session.set_actor(caller);
 
-    session
+    let address = session
         .instantiate(Instance::default())
         .unwrap()
         .result
         .to_account_id()
-        .into()
+        .into();
+
+    (session, address)
 }
 
 #[test]
 fn test_simple_integer_messages() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let old_val = session.query(instance.get_u32()).unwrap().result.unwrap();
     let new_val = old_val + 42;
@@ -43,8 +45,7 @@ fn test_simple_integer_messages() -> Result<()> {
 
 #[test]
 fn test_struct_messages() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let val = Struct2(
         Struct1 {
@@ -66,8 +67,7 @@ fn test_struct_messages() -> Result<()> {
 
 #[test]
 fn test_array_messages() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let _r = session.execute(instance.set_array([1, 2, 3])).unwrap();
     let _r = session.execute(instance.set_enum1(Enum1::A())).unwrap();
@@ -79,8 +79,7 @@ fn test_array_messages() -> Result<()> {
 
 #[test]
 fn test_sequence_messages() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let _r = session
         .execute(instance.set_sequence(vec![5, 2, 3]))
@@ -94,8 +93,7 @@ fn test_sequence_messages() -> Result<()> {
 
 #[test]
 fn test_compact_messages() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let _r = session
         .execute(instance.set_compact(scale::Compact(42)))
@@ -112,8 +110,7 @@ fn test_compact_messages() -> Result<()> {
 
 #[test]
 fn test_messages_with_clashing_argument_names() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let _r = session
         .execute(instance.set_forbidden_names(1, 2, 3, 4, 5))
@@ -127,8 +124,7 @@ fn test_messages_with_clashing_argument_names() -> Result<()> {
 
 #[test]
 fn test_conversion_to_account_id() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let _r = session.execute(instance.set_u32(12345)).unwrap();
 
@@ -144,8 +140,7 @@ fn test_conversion_to_account_id() -> Result<()> {
 fn test_events() -> Result<()> {
     use test_contract::event::Event;
 
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let struct2 = Struct2(
         Struct1 {
@@ -195,8 +190,7 @@ fn test_events() -> Result<()> {
 
 #[test]
 fn test_ink_lang_error() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let r = session
         .query(instance.generate_ink_lang_error())
@@ -218,8 +212,7 @@ fn test_upload() -> Result<()> {
 
 #[test]
 fn test_receiving_value() -> Result<()> {
-    let mut session: Session<MinimalRuntime> = Session::new().expect("Init new Session");
-    let instance = setup(&mut session, BOB);
+    let (mut session, instance) = setup(BOB);
 
     let result = session
         .execute(instance.receive_value().with_value(123))
