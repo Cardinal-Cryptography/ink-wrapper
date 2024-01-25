@@ -2,7 +2,7 @@
 name = "ink-wrapper-types"
 version = "0.6.0"
 description = "Helper library for contract client code generated with ink-wrapper."
-categories = []
+categories = ["development-tools::build-utils"]
 authors = ["Cardinal Cryptography", "Cardinal"]
 edition = "2021"
 license = "Apache-2.0"
@@ -24,14 +24,13 @@ thiserror = { version = "1.0.40" }
 # drink specific integration.
 drink = { version = "0.8.6", optional = true }
 ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }
-frame-system = { version = "23.0.0", optional = true }
 
 # See https://github.com/rust-lang/rust/issues/86161#issuecomment-1885012778
 ahash = "=0.8.6"
 
 [features]
 default = ["drink"]
-drink = ["dep:drink", "dep:ink_metadata_drink", "dep:frame-system"]
+drink = ["dep:drink", "dep:ink_metadata_drink"]
 
 [patch.crates-io]
 ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }

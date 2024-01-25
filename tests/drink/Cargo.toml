@@ -15,9 +15,8 @@ scale = { package = "parity-scale-codec", version = "3", default-features = fals
 ink-wrapper-types = { path = "../../ink-wrapper-types", default-features = false, features = [
     "drink",
 ] }
-frame-system = "23.0.0"
 ink_metadata = "4.3.0"
-ink_primitives = "4.2.1"
+ink_primitives = "4.3.0"
 
 anyhow = "1.0.69"
 sp-core = "16.0.0"

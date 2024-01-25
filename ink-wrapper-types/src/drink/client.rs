@@ -1,5 +1,5 @@
 use ::drink::{
-    pallet_contracts,
+    frame_system, pallet_contracts,
     runtime::{HashFor, MinimalRuntime},
     session::Session,
     Weight,
