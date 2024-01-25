@@ -1,6 +1,6 @@
 [package]
 name = "ink-wrapper-types"
-version = "0.7.0"
+version = "0.6.0"
 description = "Helper library for contract client code generated with ink-wrapper."
 categories = []
 authors = ["Cardinal"]
