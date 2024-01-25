@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - `ExecCall` gets new trait bound `T` to reperesent type of the returned value.
-- Support for `DRink!` added to `ink-wrapper-types`.
+- Support for `DRink!` added to `ink-wrapper-types`. Currently fixed to work only with `MinimalRuntime`.
 - Support for `aleph-client` is removed from `ink-wrapper-types`. This is due to the fact that `aleph-client` is not published to crates.io anymore, which would make it impossible to publich `ink-wrapper-types` as well. Support for live chains will come back in the future, by using the `subxt` as a backend.
 
 ## 0.6.1
