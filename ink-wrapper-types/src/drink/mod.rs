@@ -22,7 +22,6 @@ pub enum Error {
 }
 
 pub trait Connection<R: frame_system::Config> {
-    // TODO return deposit as well.
     fn upload_code(&mut self, call: UploadCall) -> Result<HashFor<R>, Error>;
 
     fn instantiate<T: Send>(
