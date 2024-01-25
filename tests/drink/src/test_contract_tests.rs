@@ -1,15 +1,18 @@
 use anyhow::Result;
 use assert2::assert;
-use drink::{runtime::MinimalRuntime, session::Session};
 use ink_primitives::AccountId;
-use ink_wrapper_types::{util::ToAccountId, Connection, ContractEvents};
+use ink_wrapper_types::{
+    drink::{runtime::MinimalRuntime, session::Session, AccountId32},
+    util::ToAccountId,
+    Connection, ContractEvents,
+};
 
 use crate::{
     test_contract::{self, Enum1, Instance, Struct1, Struct2},
     *,
 };
 
-fn setup(caller: drink::AccountId32) -> (Session<MinimalRuntime>, Instance) {
+fn setup(caller: AccountId32) -> (Session<MinimalRuntime>, Instance) {
     let mut session = Session::new().expect("Init new Session");
     let _code_hash = session.upload_code(test_contract::upload()).unwrap();
 
@@ -232,7 +235,7 @@ fn test_receiving_value_in_constructor() -> Result<()> {
 
     let _ = session.set_actor(BOB);
 
-    let txn: ink_wrapper_types::ContractInstantiateResult<drink::AccountId32> = session
+    let txn: ink_wrapper_types::ContractInstantiateResult<AccountId32> = session
         .instantiate(Instance::payable_constructor().with_value(123))
         .unwrap();
 

@@ -1,7 +1,7 @@
 mod client;
 
-use ::drink::{frame_system, runtime::HashFor, DispatchError, Weight};
 pub use client::*;
+use drink::{frame_system, runtime::HashFor, DispatchError, Weight};
 
 use crate::{ContractEvent, ExecCall, InstantiateCall, ReadCall, UploadCall};
 

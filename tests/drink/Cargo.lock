@@ -4796,7 +4796,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert2",
- "drink",
  "ink-wrapper-types",
  "ink_metadata 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "ink_primitives 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",

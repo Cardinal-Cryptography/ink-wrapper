@@ -1,8 +1,11 @@
 use anyhow::Result;
 use assert2::assert;
-use drink::{runtime::MinimalRuntime, session::Session};
 use ink_primitives::AccountId;
-use ink_wrapper_types::{util::ToAccountId, Connection};
+use ink_wrapper_types::{
+    drink::{runtime::MinimalRuntime, session::Session, AccountId32},
+    util::ToAccountId,
+    Connection,
+};
 use psp22_contract::{Instance, PSP22 as _};
 
 use crate::*;
@@ -19,7 +22,7 @@ pub fn balance_of(
         .unwrap()
 }
 
-pub fn setup(caller: drink::AccountId32) -> (Session<MinimalRuntime>, Instance) {
+pub fn setup(caller: AccountId32) -> (Session<MinimalRuntime>, Instance) {
     let mut session = Session::new().expect("Init new Session");
     let _code_hash = session.upload_code(psp22_contract::upload()).unwrap();
 

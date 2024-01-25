@@ -22,7 +22,7 @@ anyhow = { version = "1.0.51" }
 thiserror = { version = "1.0.40" }
 
 # drink specific integration.
-drink = { version = "0.8.6", optional = true }
+drink = { version = "0.8", optional = true }
 ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }
 
 # See https://github.com/rust-lang/rust/issues/86161#issuecomment-1885012778
