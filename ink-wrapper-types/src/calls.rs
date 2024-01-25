@@ -118,7 +118,7 @@ impl<T: scale::Decode + Send> ExecCall<T> {
 /// Reperesents a contract call to a payable method that still needs the value transferred to be specified.
 /// Use the `with_value()` method to set the value.
 #[derive(Debug, Clone)]
-pub struct ExecCallNeedsValue<T: scale::Decode + Send> {
+pub struct ExecCallNeedsValue<T> {
     /// The account id of the contract to call.
     pub account_id: AccountId,
     /// The encoded data of the call.
