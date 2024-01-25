@@ -1,9 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std, no_main)]
 
-// An example code of a smart contract using PSP22Data struct to implement
-// the functionality of PSP22 fungible token.
+// An example code of a smart contract using the PSP22Data struct to implement
+// the functionality of a PSP22 fungible token.
 //
-// Copied from PSP22 repository and modified.
+// Copied from the PSP22 repository and modified.
 #[ink::contract]
 mod token {
     use ink::prelude::vec::Vec;
