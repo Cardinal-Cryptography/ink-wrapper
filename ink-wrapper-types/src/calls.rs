@@ -84,7 +84,7 @@ impl<T: Send> InstantiateCallNeedsValue<T> {
 
 /// Represents a mutating contract call to be made.
 #[derive(Debug, Clone)]
-pub struct ExecCall<T: scale::Decode + Send> {
+pub struct ExecCall<T> {
     /// The account id of the contract to call.
     pub account_id: AccountId,
     /// The encoded data of the call.
