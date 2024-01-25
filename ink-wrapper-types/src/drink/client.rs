@@ -96,6 +96,9 @@ fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
     value: u128,
     data: Vec<u8>,
 ) -> Result<ContractResult<T>, Error> {
+    // Reset events to make sure we don't have any events from previous calls.
+    sandbox.reset_events();
+
     let result = sandbox.call_contract(
         address,
         value,
