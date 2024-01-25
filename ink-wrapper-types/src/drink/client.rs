@@ -133,10 +133,8 @@ fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
         events,
         reverted: result
             .result
-            .map(|exec_result| exec_result.did_revert())
-            .expect(
-            "If `result.result` was `err`, we should have returned `Err` from the whole function.",
-        ),
+            .expect("If `result.result` was `err`, we should have returned `Err` from the whole function.")
+            .did_revert(),
     })
 }
 
