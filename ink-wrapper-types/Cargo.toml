@@ -27,7 +27,7 @@ ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink
 frame-system = { version = "23.0.0", optional = true }
 
 # See https://github.com/rust-lang/rust/issues/86161#issuecomment-1885012778
-ahash = "=0.8.4"
+ahash = "=0.8.6"
 
 [features]
 default = ["drink"]

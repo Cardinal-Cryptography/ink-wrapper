@@ -1876,6 +1876,7 @@ checksum = "8e04e2fd2b8188ea827b32ef11de88377086d690286ab35747ef7f9bf3ccb590"
 name = "ink-wrapper-types"
 version = "0.7.0"
 dependencies = [
+ "ahash 0.8.6",
  "anyhow",
  "drink",
  "frame-system",
