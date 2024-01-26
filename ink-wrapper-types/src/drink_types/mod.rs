@@ -1,9 +1,9 @@
 mod client;
 
+use crate::{ContractEvent, ExecCall, InstantiateCall, QueryArgs, UploadCall};
 pub use client::*;
-use drink::{frame_system, runtime::HashFor, DispatchError, Weight};
 
-use crate::{ContractEvent, ExecCall, InstantiateCall, ReadCall, UploadCall};
+use drink::{frame_system, runtime::HashFor, DispatchError, Weight};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -37,7 +37,7 @@ pub trait Connection<R: frame_system::Config> {
     /// Like `exec`, but does not commit changes
     fn query<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
-        call: ReadCall<T>,
+        call: impl Into<QueryArgs<T>>,
     ) -> Result<ContractReadResult<T>, Error>;
 }
 

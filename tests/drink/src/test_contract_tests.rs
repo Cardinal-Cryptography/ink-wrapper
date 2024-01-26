@@ -2,7 +2,7 @@ use anyhow::Result;
 use assert2::assert;
 use drink::{runtime::MinimalRuntime, session::Session, AccountId32};
 use ink_primitives::AccountId;
-use ink_wrapper_types::{util::ToAccountId, Connection, ContractEvents};
+use ink_wrapper_types::{Connection, ContractEvents, ToAccountId};
 
 use crate::{
     test_contract::{self, Enum1, Instance, Struct1, Struct2},

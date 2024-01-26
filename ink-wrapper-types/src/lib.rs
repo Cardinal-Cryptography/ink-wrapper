@@ -4,10 +4,11 @@ pub mod drink_types;
 pub use drink_types::*;
 
 mod calls;
-
-pub mod util;
-
 pub use calls::*;
+
+pub mod utils;
+pub use utils::*;
+
 use ink_primitives::AccountId;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

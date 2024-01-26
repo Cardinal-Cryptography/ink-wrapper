@@ -1,4 +1,4 @@
-use ::drink::{
+use drink::{
     frame_system, pallet_contracts,
     runtime::{HashFor, MinimalRuntime},
     session::Session,
@@ -6,7 +6,7 @@ use ::drink::{
 };
 
 use super::*;
-use crate::util::ToAccountId;
+use crate::utils::ToAccountId;
 
 type MinimalRuntimeAccount = <MinimalRuntime as frame_system::Config>::AccountId;
 
@@ -76,14 +76,15 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
 
     fn query<T: scale::Decode + Send + std::fmt::Debug>(
         &mut self,
-        call: ReadCall<T>,
+        call: impl Into<QueryArgs<T>>,
     ) -> Result<ContractReadResult<T>, Error> {
+        let args = call.into();
         let actor = self.get_actor();
         let gas_limit = self.get_gas_limit();
-        let contract_address = (*AsRef::<[u8; 32]>::as_ref(&call.account_id)).into();
+        let contract_address = (*AsRef::<[u8; 32]>::as_ref(&args.account_id)).into();
 
         self.sandbox().dry_run(|sandbox| {
-            call_contract(actor, gas_limit, sandbox, contract_address, 0, call.data)
+            call_contract(actor, gas_limit, sandbox, contract_address, 0, args.data)
         })
     }
 }
