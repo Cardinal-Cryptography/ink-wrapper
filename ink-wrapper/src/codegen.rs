@@ -662,10 +662,12 @@ fn quote_docs(lines: &[String]) -> proc_macro2::TokenStream {
     if lines.is_empty() {
         quote! {}
     } else {
-        let d = format!(
-            "{}",
-            lines.iter().map(|l| l.trim()).collect::<Vec<_>>().join("")
-        );
+        let d = lines
+            .iter()
+            .map(|l| l.trim())
+            .collect::<Vec<_>>()
+            .join("")
+            .to_string();
         quote! { #[doc = #d] }
     }
 }
