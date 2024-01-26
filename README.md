@@ -48,8 +48,54 @@ Make sure the file you generated is included in your module structure:
 ```rust
 mod my_contract;
 ```
+#### DRink!
 
-### `aleph_client`
+Add the following to your `Cargo.toml:
+```toml
+[dependencies]
+drink = "0.8.6"
+ink_primitives = "4.3.0"
+ink-wrapper-types = { version = "0.7.0", default-feauters = false, features = [ "drink" ] }
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [ "derive" ] }
+```
+
+After generating the wrappers, the `my_contract` will contain `Instance` struct which represents the contract's state.
+
+The easiest way to write a test is to use drink's unit test macro which will set up the `drink::session::Sessin<MinimalRuntime>` object:
+```rust
+// Auto-generated wrappers need to be added to the crate.
+mod my_contract;
+
+// Minimal imports
+use ink_wrapper_types::{Connection, ToAccountId};
+use drink::{session::Session, AccountId32};
+
+#[drink::test]
+fn my_test(mut session: Session) {
+    // Upload code to DRink! backend
+    let _code_hash = session.upload_code(my_contract::upload()).expect("Upload to succeed");
+
+    // Instantiate the contract.
+    let address = session.instantiate(my_contract::Instance::new(1000))
+        .expect("No pallet-contract errors")
+        .result // AccountId, address, of the new instance
+        .to_account_id() // Map to ink_primitives type
+        .into();
+
+    // Now we can call contract's methods. They're provided by the trait `my_contract::MyContract` (depends on your actual contract name)
+    use my_contract::MyContract as _;
+
+    // Construct the call object.
+    let exec_call = address.some_exec_call();
+    
+    // Execute it.
+    let res = session.execute(exec_call);
+}
+```
+
+For more comprehensive examples on actual contract wrappers, see `tests` directory.
+
+#### `aleph_client` (deprecated from `0.7.0`)
 
 You will need the following dependencies for the wrapper to work:
 
@@ -68,7 +114,7 @@ async-trait = "0.1.68"
 aleph_client = "3.0.0"
 ```
 
-### Basic usage
+##### Basic usage
 
 With that, you're ready to use the wrappers in your code. The generated module will have an `Instance` struct that
 represents an instance of your contract. You can either talk to an existing instance by converting an `account_id` to
@@ -105,7 +151,7 @@ In the examples above, `conn` is anything that implements `ink_wrapper_types::Co
 `ink_wrapper_types::SignedConnection` if you want to use constructors or mutators). Default implementations are provided
 for the connection in `aleph_client`.
 
-### Events
+##### Events
 
 `ink_wrapper_types::Connection` also allows you to fetch events for a given `TxInfo`:
 
@@ -121,7 +167,7 @@ let sub_contract_events = all_events.for_contract(sub_contract);
 The `all_events` object above may contain events from multiple contracts if the contract called into them. In that case,
 you can filter and parse these events by calling `for_contract` on it, with the various contracts you're interested in.
 
-### Code upload
+##### Code upload
 
 If you provide a compile-time path to the compiled `WASM`:
 
@@ -142,7 +188,7 @@ can verify this condition yourself by looking at the events at the returned `TxI
 
 ### Example
 
-Look at `test-project` in the project's repo for a fuller example. Note that `test-project` is missing the actual
+Look at `tests` in the project's repo for a fuller example. Note that `tests/drink` is missing the actual
 wrappers, which are normally generated when testing. The easiest way to regenerate them is by running
 `make all-dockerized` (requires docker) - see [Development](#development) for more on that.
 
