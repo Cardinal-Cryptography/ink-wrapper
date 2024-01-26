@@ -33,7 +33,7 @@ psp22_contract.rs: psp22_contract
 generate-wrappers: test_contract.rs psp22_contract.rs # Generate wrappers for test contracts.
 
 .PHONY: test
-test: generate-wrappers # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
+test: # Run tests natively (needs tooling installed - see ci/Dockerfile.builder).
 	cd tests/drink && cargo test || echo "Failed to run tests in drink"
 
 .PHONY: check-ink-wrapper
@@ -62,7 +62,7 @@ all-dockerized: kill build-builder # Run all checks in a dockerized environment.
 		make all
 
 .PHONY: all
-all: check-ink-wrapper check-ink-wrapper-types check-tests test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
+all: check-ink-wrapper check-ink-wrapper-types check-tests generate-wrappers test # Run all checks natively (needs tooling installed - see ci/Dockerfile.builder).
 
 .PHONY: kill
 kill: # Remove dangling containers after a dockerized test run.
