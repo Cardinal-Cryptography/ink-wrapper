@@ -6,7 +6,7 @@ mod psp22_tests;
 #[cfg(test)]
 mod test_contract_tests;
 
-use ink_wrapper_types::drink::AccountId32;
+use drink::AccountId32;
 
 pub const ALICE: AccountId32 = AccountId32::new([2u8; 32]);
 pub const BOB: AccountId32 = AccountId32::new([1u8; 32]);

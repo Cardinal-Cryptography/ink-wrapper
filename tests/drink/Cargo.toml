@@ -15,6 +15,7 @@ ink-wrapper-types = { path = "../../ink-wrapper-types", default-features = false
 ] }
 ink_metadata = "4.3.0"
 ink_primitives = "4.3.0"
+drink = "0.8.6"
 
 anyhow = "1.0.69"
 sp-core = "16.0.0"

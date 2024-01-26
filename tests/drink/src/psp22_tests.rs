@@ -1,11 +1,8 @@
 use anyhow::Result;
 use assert2::assert;
+use drink::{runtime::MinimalRuntime, session::Session, AccountId32};
 use ink_primitives::AccountId;
-use ink_wrapper_types::{
-    drink::{runtime::MinimalRuntime, session::Session, AccountId32},
-    util::ToAccountId,
-    Connection,
-};
+use ink_wrapper_types::{util::ToAccountId, Connection};
 use psp22_contract::{Instance, PSP22 as _};
 
 use crate::*;

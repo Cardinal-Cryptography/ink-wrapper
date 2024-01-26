@@ -1,10 +1,7 @@
 #[cfg(feature = "drink")]
 pub mod drink_types;
 #[cfg(feature = "drink")]
-pub use drink;
-
-#[cfg(feature = "drink")]
-pub use crate::drink_types::*;
+pub use drink_types::*;
 
 mod calls;
 
