@@ -1,6 +1,6 @@
 [package]
 name = "ink-wrapper"
-version = "0.7.0"
+version = "0.8.0"
 description = "Tool for generating type-safe code for calling an ink smart contract based on the metadata file for that contract."
 categories = ["development-tools::build-utils"]
 authors = ["Cardinal Cryptography", "Cardinal"]
