@@ -1,5 +1,5 @@
 **/target
-test-project/src/test_contract.rs
-test-project/src/psp22_contract.rs
+tests/**/src/test_contract.rs
+tests/**/src/psp22_contract.rs
 ink-wrapper-types/Cargo.lock
 **/.vscode

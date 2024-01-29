@@ -35,7 +35,7 @@ impl<T: Send> InstantiateCall<T> {
             data,
             salt: vec![],
             value: 0,
-            tx_status: Default::default(),
+            tx_status: TxStatus::Finalized,
             _contract: Default::default(),
         }
     }
@@ -84,7 +84,7 @@ impl<T: Send> InstantiateCallNeedsValue<T> {
 
 /// Represents a mutating contract call to be made.
 #[derive(Debug, Clone)]
-pub struct ExecCall {
+pub struct ExecCall<T> {
     /// The account id of the contract to call.
     pub account_id: AccountId,
     /// The encoded data of the call.
@@ -93,16 +93,19 @@ pub struct ExecCall {
     pub value: u128,
     /// The tx_status to wait on.
     pub tx_status: TxStatus,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
 }
 
-impl ExecCall {
+impl<T: scale::Decode + Send> ExecCall<T> {
     /// Create a new exec call.
     pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
         Self {
             account_id,
             data,
             value: 0,
-            tx_status: Default::default(),
+            tx_status: TxStatus::Finalized,
+            _return_type: Default::default(),
         }
     }
 
@@ -115,21 +118,27 @@ impl ExecCall {
 /// Reperesents a contract call to a payable method that still needs the value transferred to be specified.
 /// Use the `with_value()` method to set the value.
 #[derive(Debug, Clone)]
-pub struct ExecCallNeedsValue {
+pub struct ExecCallNeedsValue<T> {
     /// The account id of the contract to call.
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
 }
 
-impl ExecCallNeedsValue {
+impl<T: scale::Decode + Send> ExecCallNeedsValue<T> {
     /// Create a new needs value call.
     pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
-        Self { account_id, data }
+        Self {
+            account_id,
+            data,
+            _return_type: Default::default(),
+        }
     }
 
     /// Set the value to be sent with the call.
-    pub fn with_value(self, value: u128) -> ExecCall {
+    pub fn with_value(self, value: u128) -> ExecCall<T> {
         ExecCall {
             value,
             ..ExecCall::new(self.account_id, self.data)
@@ -144,6 +153,8 @@ pub struct ReadCall<T: scale::Decode + Send> {
     pub account_id: AccountId,
     /// The encoded data of the call.
     pub data: Vec<u8>,
+    /// The value to be sent with the call.
+    pub value: u128,
     /// A marker for the type to decode the result into.
     _return_type: PhantomData<T>,
 }
@@ -154,7 +165,36 @@ impl<T: scale::Decode + Send> ReadCall<T> {
         Self {
             account_id,
             data,
+            value: 0,
             _return_type: Default::default(),
+        }
+    }
+}
+
+pub struct ReadCallNeedsValue<T: scale::Decode + Send> {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
+}
+
+impl<T: scale::Decode + Send> ReadCallNeedsValue<T> {
+    /// Create a new needs value call.
+    pub fn new(account_id: AccountId, data: Vec<u8>) -> Self {
+        Self {
+            account_id,
+            data,
+            _return_type: Default::default(),
+        }
+    }
+
+    /// Set the value to be sent with the call.
+    pub fn with_value(self, value: u128) -> ReadCall<T> {
+        ReadCall {
+            value,
+            ..ReadCall::new(self.account_id, self.data)
         }
     }
 }
@@ -175,7 +215,7 @@ impl UploadCall {
         Self {
             wasm,
             expected_code_hash,
-            tx_status: Default::default(),
+            tx_status: TxStatus::Finalized,
         }
     }
 
@@ -183,5 +223,40 @@ impl UploadCall {
     pub fn with_tx_status(mut self, tx_status: TxStatus) -> Self {
         self.tx_status = tx_status;
         self
+    }
+}
+
+/// Represents the arguments passed when querying a contract.
+#[derive(Debug, Clone)]
+pub struct QueryArgs<T> {
+    /// The account id of the contract to call.
+    pub account_id: AccountId,
+    /// The encoded data of the call.
+    pub data: Vec<u8>,
+    /// The value to be sent with the call.
+    pub value: u128,
+    /// A marker for the type to decode the result into.
+    _return_type: PhantomData<T>,
+}
+
+impl<T: scale::Decode + Send> From<ReadCall<T>> for QueryArgs<T> {
+    fn from(value: ReadCall<T>) -> QueryArgs<T> {
+        Self {
+            account_id: value.account_id,
+            data: value.data.clone(),
+            value: value.value,
+            _return_type: Default::default(),
+        }
+    }
+}
+
+impl<T: scale::Decode + Send> From<ExecCall<T>> for QueryArgs<T> {
+    fn from(value: ExecCall<T>) -> QueryArgs<T> {
+        Self {
+            account_id: value.account_id,
+            data: value.data.clone(),
+            value: value.value,
+            _return_type: Default::default(),
+        }
     }
 }

@@ -1,27 +1,36 @@
 [package]
 name = "ink-wrapper-types"
 version = "0.6.0"
+description = "Helper library for contract client code generated with ink-wrapper."
+categories = ["development-tools::build-utils"]
+authors = ["Cardinal Cryptography", "Cardinal"]
 edition = "2021"
 license = "Apache-2.0"
 readme = "../README.md"
-description = "Helper library for contract client code generated with ink-wrapper."
 repository = "https://github.com/Cardinal-Cryptography/ink-wrapper.git"
 homepage = "https://github.com/Cardinal-Cryptography/ink-wrapper"
 documentation = "https://docs.rs/ink-wrapper-types"
 keywords = ["ink", "wasm", "blockchain", "contract", "client"]
-categories = []
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-trait = "0.1.64"
-ink_primitives = "4.2.1"
-scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
-pallet-contracts-primitives = { version = "7.0.0" }
-aleph_client = { version = "3.0.0", optional = true }
-anyhow = { version = "1.0.51", optional = true }
-subxt = { version = "0.25.0", optional = true }
+# Base, common dependencies.
+ink_primitives = "4.3.0"
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [
+    "derive",
+] }
+anyhow = { version = "1.0.51" }
+thiserror = { version = "1.0.40" }
+
+# drink specific integration.
+drink = { version = "0.8", optional = true }
+ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }
+
+# See https://github.com/rust-lang/rust/issues/86161#issuecomment-1885012778
+ahash = "0.8.6"
 
 [features]
-default = ["aleph_client"]
-aleph_client = ["dep:aleph_client", "dep:anyhow", "dep:subxt"]
+default = ["drink"]
+drink = ["dep:drink", "dep:ink_metadata_drink"]
+
+[patch.crates-io]
+ink_metadata_drink = { git = "https://github.com/paritytech/ink", package = "ink_metadata", rev = "v4.3.0", optional = true }
