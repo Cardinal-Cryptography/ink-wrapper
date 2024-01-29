@@ -11,7 +11,7 @@ jobs:
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: Cardinal-Cryptography/aleph-node/.github/actions/install-rust-toolchain@5eda3cd85e7e3aec3f2db7a26631c65d52c4b9ea
       - uses: './.github/actions/publish-if-newer'
         with:
