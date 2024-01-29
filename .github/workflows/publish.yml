@@ -19,3 +19,8 @@ jobs:
       - uses: './.github/actions/publish-if-newer'
         with:
           package: ink-wrapper
+  # Without this dummy job, the workflow will fail b/c pipeline needs at least one job w/o dependencies.
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Not publishing"
