@@ -28,6 +28,8 @@ jobs:
         - uses: './.github/actions/publish-if-newer'
           with:
             package: ink-wrapper-types
+            directory: ./ink-wrapper-types
         - uses: './.github/actions/publish-if-newer'
           with:
             package: ink-wrapper
+            directory: ./ink-wrapper

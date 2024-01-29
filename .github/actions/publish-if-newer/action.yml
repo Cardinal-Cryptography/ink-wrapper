@@ -6,6 +6,9 @@ inputs:
   package:
     required: true
     description: The name of the package to publish
+  directory:
+    required: true
+    description: The directory of the package to publish
 
 runs:
   using: composite
@@ -13,6 +16,7 @@ runs:
     - name: Publish
       shell: bash
       run: |
+        pushd ${{ inputs.directory }}
         if [ $(curl https://crates.io/api/v1/crates/${{ inputs.package }} | jq '.crate.newest_version') \
           != $(cargo metadata | jq '.packages[] | select(.name == "${{ inputs.package }}") | .version') ]
         then
@@ -20,3 +24,4 @@ runs:
         else
           echo "No new version of ${{ inputs.package }} to publish."
         fi
+        popd
