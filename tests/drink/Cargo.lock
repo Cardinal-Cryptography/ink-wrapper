@@ -2084,7 +2084,7 @@ dependencies = [
  "anyhow",
  "drink",
  "ink_metadata 4.3.0",
- "ink_primitives 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ink_primitives 4.3.0",
  "parity-scale-codec",
  "thiserror",
 ]
@@ -2145,12 +2145,13 @@ dependencies = [
 [[package]]
 name = "ink_metadata"
 version = "4.3.0"
-source = "git+https://github.com/paritytech/ink?rev=v4.3.0#71c817c596699ce5518ead95003182cc35c5902d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3fddff95ce3e01f42002fdaf96edda691dbccb08c9ae76d7101daa1fa634e601"
 dependencies = [
  "derive_more",
  "impl-serde",
- "ink_prelude 4.3.0 (git+https://github.com/paritytech/ink?rev=v4.3.0)",
- "ink_primitives 4.3.0 (git+https://github.com/paritytech/ink?rev=v4.3.0)",
+ "ink_prelude 4.3.0",
+ "ink_primitives 4.3.0",
  "scale-info",
  "serde",
 ]
@@ -2182,14 +2183,6 @@ dependencies = [
 
 [[package]]
 name = "ink_prelude"
-version = "4.3.0"
-source = "git+https://github.com/paritytech/ink?rev=v4.3.0#71c817c596699ce5518ead95003182cc35c5902d"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
-name = "ink_prelude"
 version = "5.0.0-rc"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc3fbd55e0cf78e456ad4a92558d55b577bf65944bb37bf7debb8f03ed66a47b"
@@ -2204,21 +2197,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6414bcad12ebf0c3abbbb192a09e4d06e22f662cf3e19545204e1b0684be12a1"
 dependencies = [
  "derive_more",
- "ink_prelude 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "parity-scale-codec",
- "scale-decode",
- "scale-encode",
- "scale-info",
- "xxhash-rust",
-]
-
-[[package]]
-name = "ink_primitives"
-version = "4.3.0"
-source = "git+https://github.com/paritytech/ink?rev=v4.3.0#71c817c596699ce5518ead95003182cc35c5902d"
-dependencies = [
- "derive_more",
- "ink_prelude 4.3.0 (git+https://github.com/paritytech/ink?rev=v4.3.0)",
+ "ink_prelude 4.3.0",
  "parity-scale-codec",
  "scale-decode",
  "scale-encode",
@@ -4543,7 +4522,7 @@ dependencies = [
  "assert2",
  "drink",
  "ink-wrapper-types",
- "ink_primitives 4.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ink_primitives 4.3.0",
  "parity-scale-codec",
 ]
 
@@ -5569,18 +5548,18 @@ checksum = "09041cd90cf85f7f8b2df60c646f853b7f535ce68f85244eb6731cf89fa498ec"
 
 [[package]]
 name = "zerocopy"
-version = "0.7.26"
+version = "0.7.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e97e415490559a91254a2979b4829267a57d2fcd741a98eee8b722fb57289aa0"
+checksum = "74d4d3961e53fa4c9a25a8637fc2bfaf2595b3d3ae34875568a5cf64787716be"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.7.26"
+version = "0.7.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd7e48ccf166952882ca8bd778a43502c64f33bf94c12ebe2a7f08e5a0f6689f"
+checksum = "9ce1b18ccd8e73a9321186f97e46f9f04b778851177567b1975109d26a08d2a6"
 dependencies = [
  "proc-macro2",
  "quote",
