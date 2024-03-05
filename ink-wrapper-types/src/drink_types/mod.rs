@@ -3,7 +3,9 @@ mod client;
 use crate::{ContractEvent, ExecCall, InstantiateCall, QueryArgs, UploadCall};
 pub use client::*;
 
-use drink::{frame_system, runtime::HashFor, DispatchError, Weight, pallet_contracts::StorageDeposit};
+use drink::{
+    frame_system, pallet_contracts::StorageDeposit, runtime::HashFor, DispatchError, Weight,
+};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
