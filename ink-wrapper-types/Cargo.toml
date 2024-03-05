@@ -1,6 +1,6 @@
 [package]
 name = "ink-wrapper-types"
-version = "0.8.0"
+version = "0.9.0"
 description = "Helper library for contract client code generated with ink-wrapper."
 categories = ["development-tools::build-utils"]
 authors = ["Cardinal Cryptography", "Cardinal"]
