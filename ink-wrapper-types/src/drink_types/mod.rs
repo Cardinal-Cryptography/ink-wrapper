@@ -3,7 +3,7 @@ mod client;
 use crate::{ContractEvent, ExecCall, InstantiateCall, QueryArgs, UploadCall};
 pub use client::*;
 
-use drink::{frame_system, runtime::HashFor, DispatchError, Weight};
+use drink::{frame_system, runtime::HashFor, DispatchError, Weight, pallet_contracts::StorageDeposit};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -49,13 +49,7 @@ pub struct ContractResult<R> {
     pub events: Vec<ContractEvent>,
     pub reverted: bool,
     pub debug_message: Vec<u8>,
-    pub storage_deposit: StorageDeposit,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum StorageDeposit {
-    Refund(u128),
-    Charge(u128),
+    pub storage_deposit: StorageDeposit<u128>,
 }
 
 pub type ContractInstantiateResult<AccountId> = ContractResult<AccountId>;

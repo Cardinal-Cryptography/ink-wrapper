@@ -54,10 +54,7 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
             events,
             reverted: false,
             debug_message: instantiate_contract_result.debug_message,
-            storage_deposit: match instantiate_contract_result.storage_deposit {
-                pallet_contracts::StorageDeposit::Refund(amount) => StorageDeposit::Refund(amount),
-                pallet_contracts::StorageDeposit::Charge(amount) => StorageDeposit::Charge(amount),
-            },
+            storage_deposit: instantiate_contract_result.storage_deposit,
         })
     }
 
@@ -140,10 +137,7 @@ fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
             .expect("If `result.result` was `err`, we should have returned `Err` from the whole function.")
             .did_revert(),
         debug_message: result.debug_message,
-        storage_deposit: match result.storage_deposit {
-            pallet_contracts::StorageDeposit::Refund(amount) => StorageDeposit::Refund(amount),
-            pallet_contracts::StorageDeposit::Charge(amount) => StorageDeposit::Charge(amount),
-        },
+        storage_deposit: result.storage_deposit,
     })
 }
 
