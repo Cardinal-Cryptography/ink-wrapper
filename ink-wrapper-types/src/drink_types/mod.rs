@@ -48,6 +48,14 @@ pub struct ContractResult<R> {
     pub result: R,
     pub events: Vec<ContractEvent>,
     pub reverted: bool,
+    pub debug_message: Vec<u8>,
+    pub storage_deposit: StorageDeposit,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StorageDeposit {
+    Refund(u128),
+    Charge(u128),
 }
 
 pub type ContractInstantiateResult<AccountId> = ContractResult<AccountId>;
