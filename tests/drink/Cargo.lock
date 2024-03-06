@@ -1067,7 +1067,8 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 [[package]]
 name = "drink"
 version = "0.8.7"
-source = "git+https://github.com/inkdevhub/drink?branch=drink-8.7#b865755afd1897003eb43af141b916fe2b8d59b1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "080eec4536bfe740b58a55418eb7e76eb2ffdd88b3e7978d752d6f6233de39b6"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
@@ -1094,7 +1095,8 @@ dependencies = [
 [[package]]
 name = "drink-test-macro"
 version = "0.8.7"
-source = "git+https://github.com/inkdevhub/drink?branch=drink-8.7#b865755afd1897003eb43af141b916fe2b8d59b1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f10924a75fb62a42e8991217a69f86c0a381518aa5c783f1f39cf8ab9b721a5"
 dependencies = [
  "cargo_metadata 0.18.1",
  "contract-build",

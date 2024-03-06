@@ -22,8 +22,8 @@ anyhow = { version = "1.0.51" }
 thiserror = { version = "1.0.40" }
 
 # drink specific integration.
-drink = { git = "https://github.com/inkdevhub/drink", branch = "drink-8.7", optional = true }
-drink-test-macro = { git = "https://github.com/inkdevhub/drink", branch = "drink-8.7", optional = true }
+drink = { version = "0.8.7", optional = true }
+drink-test-macro = { version = "0.8.7", optional = true }
 ink_metadata = { version = "4.3.0", optional = true }
 pallet-contracts-primitives = { version = "26.0.0", optional = true }
 
