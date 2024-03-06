@@ -36,7 +36,8 @@ pub fn setup(caller: AccountId32) -> (Session<MinimalRuntime>, Instance) {
 }
 
 #[drink::test]
-fn test_transfers(mut session: Session) -> Result<()> {
+fn test_transfers() -> Result<()> {
+    let mut session = Session::<MinimalRuntime>::new().unwrap();
     session.upload_code(psp22_contract::upload()).unwrap();
 
     let _ = session.set_actor(BOB);

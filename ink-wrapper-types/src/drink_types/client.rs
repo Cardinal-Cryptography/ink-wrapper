@@ -53,6 +53,8 @@ impl Connection<MinimalRuntime> for Session<MinimalRuntime> {
             result: contract_address,
             events,
             reverted: false,
+            debug_message: instantiate_contract_result.debug_message,
+            storage_deposit: instantiate_contract_result.storage_deposit,
         })
     }
 
@@ -134,6 +136,8 @@ fn call_contract<T: scale::Decode + Send + std::fmt::Debug>(
             .result
             .expect("If `result.result` was `err`, we should have returned `Err` from the whole function.")
             .did_revert(),
+        debug_message: result.debug_message,
+        storage_deposit: result.storage_deposit,
     })
 }
 
