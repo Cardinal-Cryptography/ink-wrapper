@@ -14,7 +14,7 @@ ink-wrapper-types = { path = "../../ink-wrapper-types", default-features = false
     "drink",
 ] }
 ink_primitives = "4.3.0"
-drink = "0.8.6"
+drink = "=0.8.4"
 
 anyhow = "1.0.69"
 assert2 = "0.3.10"

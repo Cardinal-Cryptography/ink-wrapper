@@ -18,7 +18,7 @@ mod token {
         #[ink(constructor)]
         pub fn new(supply: u128) -> Self {
             Self {
-                data: PSP22Data::new(supply, Self::env().caller()),
+                data: PSP22Data::new(supply, Self::env().caller()).0,
             }
         }
 
