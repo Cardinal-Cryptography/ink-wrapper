@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.9.0
+
+### Changed
+
+- `ink_wrapper_types::drink_types::ContractResult` was extended with `storage_deposit` and `debug_message` fields
+
 ## 0.7.0
 
 ### Changed
